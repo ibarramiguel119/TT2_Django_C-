@@ -1,0 +1,80 @@
+version: '3'
+
+services:
+  db_postgres:
+    container_name: db_postgres_mk
+    image: postgis/postgis:15-3.3
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Mikeadd
+    networks:
+      - mk-network
+
+  pgadmin:
+    container_name: pgadmin_mk
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "ibarramiguel119@gmail.com"
+      PGADMIN_DEFAULT_PASSWORD: "mkroot"
+    ports:
+      - '5050:80'
+    depends_on:  
+      - db_postgres
+    networks:
+      - mk-network
+
+  web:
+    container_name: web_mk
+    build: ./proyect_web_v1
+    command: python manage.py runserver 0.0.0.0:80
+    expose:
+      - 80
+    volumes:
+      - static:/app/static
+      - ./proyect_web_v1:/app  # Aquí ajustas el path del código
+      - ./certbot/www/:/var/www/certbot/:ro
+    depends_on:
+      - db_postgres
+    environment:
+      - GDAL_LIBRARY_PATH=/usr/lib/libgdal.so
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - DJANGO_ALLOWED_HOSTS=${DOMAIN}
+    networks:
+      - mk-network
+
+  nginx:
+    image: nginx:1.13
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./config/nginx/conf.d:/etc/nginx/conf.d
+      - ./certbot/conf:/etc/letsencrypt/:ro
+      - static:/app/static
+    depends_on:
+      - web
+    networks:
+      - mk-network
+
+  ngrok:
+    image: wernight/ngrok
+    restart: always
+    environment:
+      - NGROK_AUTH=2niKUIMtIeycDi29rG1vI2Eo9tX_5NFQ5xWjGWfsaezMFyM6y
+      - NGROK_PORT=web:80
+    ports:
+      - "4040:4040" # Acceso a la interfaz web de ngrok    
+    networks:
+      - mk-network  
+
+volumes:
+  postgres_data:
+  static:
+  proxy-dhparams:
+
+networks:
+  mk-network:
+    driver: bridge

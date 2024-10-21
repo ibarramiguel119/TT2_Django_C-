@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Tomar Imágenes</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #ffffff;
+            color: #000000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            transition: background-color 0.5s ease;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin-top: 20px;
+        }
+
+        /* Contenedor principal para el video y sliders */
+        .video-slider-container {
+            display: flex; /* Aligna el video y los sliders en línea */
+            align-items: flex-start; /* Alinea verticalmente los elementos al inicio */
+            margin-bottom: 20px; /* Espacio entre esta sección y la siguiente */
+        }
+
+        /* Estilos para el video */
+        #video {
+            width: 100%;
+            max-width: 600px;
+            border: 2px solid #00ffcc;
+            border-radius: 10px;
+            margin-right: 20px; /* Espacio entre el video y los sliders */
+            box-shadow: 0 0 20px #00ffcc;
+        }
+
+        /* Contenedor para los sliders */
+        .slider-container {
+            display: flex;
+            flex-direction: column; /* Alinea los sliders verticalmente */
+        }
+
+        .slider {
+            width: 200px; /* Ancho reducido para los sliders */
+            margin: 5px 0; /* Espaciado superior e inferior de cada slider */
+        }
+
+        button {
+            background-color: #00ffcc;
+            color: #0a0a0a;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s;
+            margin: 10px;
+            box-shadow: 0 0 10px #00ffcc;
+        }
+
+        button:hover {
+            background-color: #00cc99;
+            transform: scale(1.05);
+        }
+
+        /* Contenedor para las imágenes capturadas */
+        #preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px; /* Espacio inferior */
+        }
+
+        .imagen-capturada {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 10px;
+            box-shadow: 0 0 10px #00ffcc;
+            transition: transform 0.3s;
+        }
+
+        .imagen-capturada:hover {
+            transform: scale(1.05);
+        }
+
+        /* Estilos para los radio buttons */
+        .radio-container {
+            display: flex; /* Alinea los radio buttons en línea */
+            align-items: center; /* Centra verticalmente */
+            margin: 10px 0; /* Espacio entre los radio buttons */
+        }
+
+        .radio-label {
+            margin-right: 10px; /* Espacio entre la etiqueta y el radio button */
+            font-size: 1.2rem;
+        }
+
+        input[type="radio"] {
+            margin-right: 5px; /* Espacio entre el radio button y el texto */
+        }
+
+        /* Estilo para el select */
+        .select-container {
+            margin: 10px 0; /* Espacio superior e inferior del select */
+        }
+
+        select {
+            font-size: 1rem; /* Tamaño de fuente */
+            padding: 5px; /* Espaciado interno */
+            border-radius: 5px; /* Esquinas redondeadas */
+            border: 1px solid #ccc; /* Borde del select */
+            box-shadow: 0 0 5px #00ffcc; /* Sombra del select */
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2rem;
+            }
+            h2 {
+                font-size: 1.5rem;
+            }
+            button {
+                width: 100%;
+            }
+            .slider {
+                width: 150px; /* Ajuste para pantallas pequeñas */
+            }
+        }
+    </style>
+</head>
+<body>
+
+
+    <!-- Contenedor para el video y los sliders -->
+    <div class="video-slider-container">
+        <video id="video" autoplay></video>
+        <div class="slider-container">
+            <h2>Configuración de Sliders:</h2>
+            <label for="slider1">Slider 1</label>
+            <input type="range" min="0" max="100" value="50" class="slider" id="slider1">
+            <input type="hidden" name="slider1" id="slider1_input" value="50">
+            
+            <label for="slider2">Slider 2</label>
+            <input type="range" min="0" max="100" value="50" class="slider" id="slider2">
+            <input type="hidden" name="slider2" id="slider2_input" value="50">
+
+            <label for="slider3">Slider 3</label>
+            <input type="range" min="0" max="100" value="50" class="slider" id="slider3">
+            <input type="hidden" name="slider3" id="slider3_input" value="50">
+
+            <label for="slider4">Slider 4</label>
+            <input type="range" min="0" max="100" value="50" class="slider" id="slider4">
+            <input type="hidden" name="slider4" id="slider4_input" value="50">
+        </div>
+    </div>
+
+    <!-- Contenedor para los radio buttons -->
+    <div class="radio-container">
+        <span class="radio-label">Selecciona una opción:</span>
+        <label for="radio1">
+            <input type="radio" name="options" id="radio1" value="1"> Opción 1
+        </label>
+        <label for="radio2">
+            <input type="radio" name="options" id="radio2" value="2"> Opción 2
+        </label>
+    </div>
+
+    <!-- Contenedor para el select -->
+    <div class="select-container">
+        <label for="select-options">Selecciona una opción:</label>
+        <select id="select-options">
+            <option value="opcion1">Opción 1</option>
+            <option value="opcion2">Opción 2</option>
+            <option value="opcion3">Opción 3</option>
+            <option value="opcion4">Opción 4</option>
+        </select>
+    </div>
+
+    <div>
+        <button id="capturar">Capturar Imagen</button>
+        <button id="subir">Subir Imágenes</button>
+    </div>
+
+    <h2>Imágenes Capturadas:</h2>
+    <div id="preview"></div>
+
+    <form action="" method="post">
+        {% csrf_token %}
+        <button type="submit">Iniciar captura de imágenes</button>
+    </form>
+
+    {% if resultado %}
+        <h2>Resultado de la Función:</h2>
+        <p>{{ resultado }}</p>
+    {% endif %}
+
+    <form action="" method="post">
+        {% csrf_token %}
+        <button type="submit">Ejecutar Función</button>
+    </form>
+
+    <script>
+        // Obtener acceso a la cámara
+        const video = document.getElementById('video');
+        const preview = document.getElementById('preview');
+        const capturarButton = document.getElementById('capturar');
+        const subirButton = document.getElementById('subir');
+
+        let imagenes = [];
+
+        // Configurar la cámara
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then((stream) => {
+                video.srcObject = stream;
+            })
+            .catch((error) => {
+                console.error('Error al acceder a la cámara:', error);
+            });
+
+        // Capturar imagen
+        capturarButton.addEventListener('click', () => {
+            if (imagenes.length < 10) {
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const contexto = canvas.getContext('2d');
+                contexto.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const imagenData = canvas.toDataURL('image/png');
+                
+                imagenes.push(imagenData);
+                
+                // Crear un elemento de imagen y agregarlo al preview
+                const img = document.createElement('img');
+                img.src = imagenData;
+                img.classList.add('imagen-capturada');
+                preview.appendChild(img);
+            } else {
+                alert('Has alcanzado el límite de 10 imágenes.');
+            }
+        });
+
+        // Subir imágenes
+        subirButton.addEventListener('click', () => {
+            // Aquí puedes implementar la lógica para subir las imágenes
+            alert('Imágenes listas para ser subidas: ' + imagenes.length);
+        });
+    </script>
+</body>
+</html>

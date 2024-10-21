@@ -1,0 +1,16 @@
+Django>=5.0.4
+psycopg2-binary==2.9.9
+daphne>=4.1.2
+paho-mqtt>=2.0.0
+channels>=4.1.0
+channels-redis>=4.2.0
+asyncio>=3.4.3
+Pillow>=10.3.0
+gunicorn==19.9.0
+djangorestframework
+requests
+Pillow>=10.3.0
+django-crispy-forms==1.14.0
+crispy-bootstrap4==2022.1
+django-cors-headers==4.3.1
+django-filter
