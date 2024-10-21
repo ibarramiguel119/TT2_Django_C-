@@ -1,0 +1,31 @@
+<!-- celular.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Captura Automática</title>
+</head>
+<body>
+    <video id="cameraStream" autoplay style="display:none;"></video>
+    <canvas id="snapshotCanvas" style="display:none;"></canvas>
+
+    <script>
+        const socket = new WebSocket('ws://localhost:80/ws/capture/');
+
+        socket.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            if (data.action === 'start_capture') {
+                iniciarCaptura();
+            }
+        };
+
+        function iniciarCaptura() {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    document.getElementById('cameraStream').srcObject = stream;
+                    document.getElementById('cameraStream').style.display = 'block';
+                })
+                .catch(err => console.error('Error al acceder a la cámara: ' + err));
+        }
+    </script>
+</body>
+</html>

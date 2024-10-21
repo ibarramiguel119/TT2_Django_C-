@@ -53,7 +53,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost",
     "https://localhost",
     "http://192.168.1.139",
-    "https://42a3-200-92-166-60.ngrok-free.app"
+    "https://0283-200-92-166-60.ngrok-free.app"
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -61,6 +61,7 @@ CORS_ALLOW_CREDENTIALS = True
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'base_app',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -68,6 +69,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
 ]
 
 MIDDLEWARE = [
@@ -97,6 +99,16 @@ TEMPLATES = [
         },
     },
 ]
+
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
+
+
+ASGI_APPLICATION = 'proyect_web_v1.asgi.application'
 
 WSGI_APPLICATION = 'proyect_web_v1.wsgi.application'
 

@@ -20,5 +20,10 @@ from . import views
 
 urlpatterns = [
     path('', views.home_system, name='mi_vista'),
+
+    path('home_send_data/',views.send_data,name='home_send_data'),
+
+    path('home_recibe_data/',views.recibe_data,name='home_recibe_data'),
+    
 ]
 

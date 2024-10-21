@@ -15,3 +15,14 @@ def home_system(request):
 
 def tu_funcion():
     return "¡Hola, la función se ejecutó correctamente!"
+
+
+
+
+def send_data(request):
+    return render(request, 'Home_Send/home_send.html')
+
+
+def recibe_data(request):
+    return render(request,'Home_recibe/home_recibe.html')
+
