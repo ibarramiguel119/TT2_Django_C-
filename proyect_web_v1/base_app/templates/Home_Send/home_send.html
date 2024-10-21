@@ -8,7 +8,8 @@
     <button id="captureButton">Capturar Imagen</button>
 
     <script>
-        const socket = new WebSocket('ws://localhost:80/ws/capture/');
+        const socket = new WebSocket('wss://79e5-200-92-166-60.ngrok-free.app/ws/capture/');
+
 
         document.getElementById('captureButton').onclick = function() {
             socket.send(JSON.stringify({

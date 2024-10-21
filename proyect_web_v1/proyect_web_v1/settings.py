@@ -53,7 +53,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost",
     "https://localhost",
     "http://192.168.1.139",
-    "https://0283-200-92-166-60.ngrok-free.app"
+    "https://fd56-200-92-166-60.ngrok-free.app"
 ]
 
 CORS_ALLOW_CREDENTIALS = True
