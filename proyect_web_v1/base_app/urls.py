@@ -15,7 +15,6 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-
 from . import views
 
 urlpatterns = [
@@ -24,6 +23,8 @@ urlpatterns = [
     path('home_send_data/',views.send_data,name='home_send_data'),
 
     path('home_recibe_data/',views.recibe_data,name='home_recibe_data'),
+
+    path('suma/', views.suma_view, name='suma'),
     
 ]
 

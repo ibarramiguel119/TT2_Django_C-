@@ -14,3 +14,4 @@ django-crispy-forms==1.14.0
 crispy-bootstrap4==2022.1
 django-cors-headers==4.3.1
 django-filter
+pybind11
