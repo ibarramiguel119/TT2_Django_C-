@@ -26,5 +26,7 @@ urlpatterns = [
 
     path('suma/', views.suma_view, name='suma'),
     
+    path('calcular-grados/', views.calcular_grados_view, name='calcular_grados'),
+    
 ]
 
