@@ -6,10 +6,14 @@
 <body>
     <video id="cameraStream" autoplay style="display:none;"></video>
     <canvas id="snapshotCanvas" style="display:none;"></canvas>
-
+    
+    <!-- Botón para subir una imagen desde la computadora -->
+    <input type="file" id="imageUploader" accept="image/*">
+    
     <script>
         
-        const socket = new WebSocket('wss://79e5-200-92-166-60.ngrok-free.app/ws/capture/');
+        //const socket = new WebSocket('wss://79e5-200-92-166-60.ngrok-free.app/ws/capture/');
+        const socket = new WebSocket('ws://localhost:80/ws/capture/');
 
         socket.onmessage = function(event) {
             const data = JSON.parse(event.data);
@@ -18,15 +22,13 @@
             }
         };
 
-
-        
         function iniciarCaptura() {
             navigator.mediaDevices.getUserMedia({ video: true })
                 .then(stream => {
                     document.getElementById('cameraStream').srcObject = stream;
                     document.getElementById('cameraStream').style.display = 'block';
                     
-                    // Captura una imagen después de 1 segundo de iniciar el video
+                    // Captura una imagen después de 3 segundos de iniciar el video
                     setTimeout(capturarImagen, 3000); // Cambia el tiempo si es necesario
                 })
                 .catch(err => console.error('Error al acceder a la cámara: ' + err));
@@ -42,8 +44,8 @@
             const context = canvas.getContext('2d');
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            // Convertir el canvas a una imagen base64
-            const imageData = canvas.toDataURL('image/png');
+            // Convertir el canvas a una imagen base64 en formato JPG
+            const imageData = canvas.toDataURL('image/jpeg', 0.8); // Calidad 0.8 (ajustable)
 
             // Enviar la imagen al servidor
             socket.send(JSON.stringify({ action: 'save_image', image: imageData }));
@@ -56,6 +58,33 @@
             // Opcional: Ocultar el video después de tomar la imagen
             video.style.display = 'none';
         }
+
+        // Procesar la imagen cargada desde la computadora
+        document.getElementById('imageUploader').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.getElementById('snapshotCanvas');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+
+                        // Dibujar la imagen cargada en el canvas
+                        const context = canvas.getContext('2d');
+                        context.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                        // Convertir el canvas a una imagen base64 en formato JPG
+                        const imageData = canvas.toDataURL('image/png',1.0); 
+                        // Enviar la imagen al servidor
+                        socket.send(JSON.stringify({ action: 'save_image', image: imageData }));
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
     </script>
 </body>
 </html>

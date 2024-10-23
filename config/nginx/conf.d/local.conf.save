@@ -24,24 +24,3 @@ server {
 
 
 
-
-server {
-    listen 443 ssl;
-    server_name exsium-pangea.com;
-
-    ssl_certificate /etc/letsencrypt/live/exsium-pangea.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/exsium-pangea.com/privkey.pem;
-
-	
-
-    location / {
-        proxy_pass http://web_ex:80;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header Host $host;
-        proxy_redirect off;
-    }
-
-    location /static/ {
-        alias /app/static/;
-    }
-}

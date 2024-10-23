@@ -188,10 +188,6 @@
         </select>
     </div>
 
-    <div>
-        <button id="capturar">Capturar Imagen</button>
-        <button id="subir">Subir Imágenes</button>
-    </div>
 
     <h2>Imágenes Capturadas:</h2>
     <div id="preview"></div>
@@ -205,57 +201,13 @@
         <h2>Resultado de la Función:</h2>
         <p>{{ resultado }}</p>
     {% endif %}
-
-    <form action="" method="post">
-        {% csrf_token %}
-        <button type="submit">Ejecutar Función</button>
-    </form>
-
     <script>
-        // Obtener acceso a la cámara
-        const video = document.getElementById('video');
-        const preview = document.getElementById('preview');
-        const capturarButton = document.getElementById('capturar');
-        const subirButton = document.getElementById('subir');
 
-        let imagenes = [];
+        //Habilitamos el canal del wwebsockets 
+        const socket = new WebSocket('ws://localhost:80/ws/capture/');
 
-        // Configurar la cámara
-        navigator.mediaDevices.getUserMedia({ video: true })
-            .then((stream) => {
-                video.srcObject = stream;
-            })
-            .catch((error) => {
-                console.error('Error al acceder a la cámara:', error);
-            });
 
-        // Capturar imagen
-        capturarButton.addEventListener('click', () => {
-            if (imagenes.length < 10) {
-                const canvas = document.createElement('canvas');
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                const contexto = canvas.getContext('2d');
-                contexto.drawImage(video, 0, 0, canvas.width, canvas.height);
-                const imagenData = canvas.toDataURL('image/png');
-                
-                imagenes.push(imagenData);
-                
-                // Crear un elemento de imagen y agregarlo al preview
-                const img = document.createElement('img');
-                img.src = imagenData;
-                img.classList.add('imagen-capturada');
-                preview.appendChild(img);
-            } else {
-                alert('Has alcanzado el límite de 10 imágenes.');
-            }
-        });
 
-        // Subir imágenes
-        subirButton.addEventListener('click', () => {
-            // Aquí puedes implementar la lógica para subir las imágenes
-            alert('Imágenes listas para ser subidas: ' + imagenes.length);
-        });
     </script>
 </body>
 </html>

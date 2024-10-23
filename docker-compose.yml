@@ -59,16 +59,16 @@ services:
     networks:
       - mk-network
 
-  ngrok:
-    image: wernight/ngrok
-    restart: always
-    environment:
-      - NGROK_AUTH=2niKUIMtIeycDi29rG1vI2Eo9tX_5NFQ5xWjGWfsaezMFyM6y
-      - NGROK_PORT=web:80
-    ports:
-      - "4040:4040" # Acceso a la interfaz web de ngrok    
-    networks:
-      - mk-network  
+  #ngrok:
+    #image: wernight/ngrok
+    #restart: always
+    #environment:
+      #- NGROK_AUTH=2niKUIMtIeycDi29rG1vI2Eo9tX_5NFQ5xWjGWfsaezMFyM6y
+      #- NGROK_PORT=web:80
+    #ports:
+      #- "4040:4040" # Acceso a la interfaz web de ngrok    
+    #networks:
+      #- mk-network  
 
 volumes:
   postgres_data:
