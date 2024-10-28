@@ -42,6 +42,10 @@ services:
       - GDAL_LIBRARY_PATH=/usr/lib/libgdal.so
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
       - DJANGO_ALLOWED_HOSTS=${DOMAIN}
+
+    devices:
+      - "/dev/ttyUSB0:/dev/ttyUSB0"  # Montaje del dispositivo serial
+    privileged: true  # Permisos avanzados  
     networks:
       - mk-network
 
