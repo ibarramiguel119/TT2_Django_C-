@@ -34,7 +34,7 @@ services:
       - 80
     volumes:
       - static:/app/static
-      - ./proyect_web_v1:/app  # Aquí ajustas el path del código
+      - ./proyect_web_v1:/app  # Ajusta el path del código
       - ./certbot/www/:/var/www/certbot/:ro
     depends_on:
       - db_postgres
@@ -42,7 +42,6 @@ services:
       - GDAL_LIBRARY_PATH=/usr/lib/libgdal.so
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
       - DJANGO_ALLOWED_HOSTS=${DOMAIN}
-
     devices:
       - "/dev/ttyUSB0:/dev/ttyUSB0"  # Montaje del dispositivo serial
     privileged: true  # Permisos avanzados  
@@ -63,16 +62,33 @@ services:
     networks:
       - mk-network
 
-  #ngrok:
-    #image: wernight/ngrok
-    #restart: always
-    #environment:
-      #- NGROK_AUTH=2niKUIMtIeycDi29rG1vI2Eo9tX_5NFQ5xWjGWfsaezMFyM6y
-      #- NGROK_PORT=web:80
-    #ports:
-      #- "4040:4040" # Acceso a la interfaz web de ngrok    
-    #networks:
-      #- mk-network  
+  redis:
+    container_name: redis_mk
+    image: redis:latest
+    ports:
+      - '6379:6379'
+    networks:
+      - mk-network
+
+  celery:
+    container_name: celery_mk
+    build: ./proyect_web_v1
+    command: ["python", "-m", "celery", "-A", "proyect_web_v1", "worker", "--loglevel=info"]  # Ejecutar Celery desde Python
+    volumes:
+      - ./proyect_web_v1:/app
+    depends_on:
+      - db_postgres
+      - redis
+    environment:
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - DJANGO_ALLOWED_HOSTS=${DOMAIN}
+
+    devices:
+      - "/dev/ttyUSB0:/dev/ttyUSB0"  # Montaje del dispositivo serial
+    privileged: true  # Permisos avanzados  
+    
+    networks:
+      - mk-network
 
 volumes:
   postgres_data:

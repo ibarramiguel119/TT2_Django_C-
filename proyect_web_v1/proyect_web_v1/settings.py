@@ -84,6 +84,13 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'proyect_web_v1.urls'
 
+
+# settings.py
+CELERY_BROKER_URL = 'redis://redis_mk:6379/0'  
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',

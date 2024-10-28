@@ -1,9 +1,12 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Captura Automática</title>
 </head>
 <body>
+    <h1>Captura Automática de Imágenes</h1>
     <video id="cameraStream" autoplay style="display:none;"></video>
     <canvas id="snapshotCanvas" style="display:none;"></canvas>
     
@@ -11,29 +14,36 @@
     <input type="file" id="imageUploader" accept="image/*">
     
     <script>
-        
-        //const socket = new WebSocket('wss://79e5-200-92-166-60.ngrok-free.app/ws/capture/');
+        // Crea una conexión WebSocket con el servidor
         const socket = new WebSocket('ws://localhost:80/ws/capture/');
 
+        // Manejar mensajes del servidor
         socket.onmessage = function(event) {
             const data = JSON.parse(event.data);
-            if (data.action === 'start_capture') {
+            if (data.action === 'take_photo') {
                 iniciarCaptura();
+            } else if (data.action === 'take_photo') {
+                // Tomar la foto automáticamente cuando se recibe la acción
+                capturarImagen();
             }
         };
 
+        // Función para iniciar la captura de video
         function iniciarCaptura() {
+            // Solicitar acceso a la cámara
             navigator.mediaDevices.getUserMedia({ video: true })
                 .then(stream => {
-                    document.getElementById('cameraStream').srcObject = stream;
-                    document.getElementById('cameraStream').style.display = 'block';
+                    const video = document.getElementById('cameraStream');
+                    video.srcObject = stream;
+                    video.style.display = 'block'; // Mostrar el video en la página
                     
-                    // Captura una imagen después de 3 segundos de iniciar el video
-                    setTimeout(capturarImagen, 3000); // Cambia el tiempo si es necesario
+                    // Iniciar la captura de imágenes automáticamente
+                    setInterval(capturarImagen, 5000); // Capturar una imagen cada 5 segundos
                 })
                 .catch(err => console.error('Error al acceder a la cámara: ' + err));
         }
 
+        // Función para capturar una imagen
         function capturarImagen() {
             const video = document.getElementById('cameraStream');
             const canvas = document.getElementById('snapshotCanvas');
@@ -49,14 +59,6 @@
 
             // Enviar la imagen al servidor
             socket.send(JSON.stringify({ action: 'save_image', image: imageData }));
-
-            // Detener el stream de la cámara
-            const stream = video.srcObject;
-            const tracks = stream.getTracks();
-            tracks.forEach(track => track.stop());
-
-            // Opcional: Ocultar el video después de tomar la imagen
-            video.style.display = 'none';
         }
 
         // Procesar la imagen cargada desde la computadora
@@ -75,8 +77,8 @@
                         const context = canvas.getContext('2d');
                         context.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-                        // Convertir el canvas a una imagen base64 en formato JPG
-                        const imageData = canvas.toDataURL('image/png',1.0); 
+                        // Convertir el canvas a una imagen base64 en formato PNG
+                        const imageData = canvas.toDataURL('image/png', 1.0); 
                         // Enviar la imagen al servidor
                         socket.send(JSON.stringify({ action: 'save_image', image: imageData }));
                     };
