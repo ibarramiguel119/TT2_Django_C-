@@ -1,22 +1,44 @@
-<!-- computadora.html -->
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Control desde la Computadora</title>
+    <meta charset="UTF-8">
+    <title>WebSocket Client</title>
 </head>
 <body>
-    <button id="captureButton">Capturar Imagen</button>
-
+    <h1>Cliente WebSocket</h1>
+    <div id="messages"></div>
+    
     <script>
-        //const socket = new WebSocket('wss://79e5-200-92-166-60.ngrok-free.app/ws/capture/');
+        const messagesDiv = document.getElementById('messages');
+
+        // Establece la conexión WebSocket con el servidor
         const socket = new WebSocket('ws://localhost:80/ws/capture/');
 
+        // Evento que se ejecuta cuando la conexión se establece correctamente
+        socket.onopen = function(event) {
+            console.log('Conexión establecida con el servidor WebSocket.');
+        };
 
-        document.getElementById('captureButton').onclick = function() {
-            socket.send(JSON.stringify({
-                'action': 'start_capture'
-            }));
+        // Evento que se ejecuta cuando se recibe un mensaje del servidor
+        socket.onmessage = function(event) {
+            const data = JSON.parse(event.data); // Analiza el mensaje JSON recibido
+            console.log('Mensaje recibido:', data);
+
+            // Puedes procesar el mensaje y actualizar el DOM
+            const messageElement = document.createElement('div');
+            messageElement.textContent = `Acción: ${data.message}, Q1: ${data.q1}, Número total: ${data.numerototal}`;
+            messagesDiv.appendChild(messageElement);
+        };
+
+        // Evento que se ejecuta cuando ocurre un error
+        socket.onerror = function(event) {
+            console.error('Error en la conexión WebSocket:', event);
+        };
+
+        // Evento que se ejecuta cuando se cierra la conexión
+        socket.onclose = function(event) {
+            console.log('Conexión cerrada:', event);
         };
     </script>
 </body>
-</html> 
+</html>

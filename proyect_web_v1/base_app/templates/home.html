@@ -150,18 +150,22 @@
             <h2>Configuración de Sliders:</h2>
             <label for="slider1">Slider 1</label>
             <input type="range" min="0" max="100" value="50" class="slider" id="slider1">
+            <span id="slider1_value">50</span> <!-- Muestra el valor del slider -->
             <input type="hidden" name="slider1" id="slider1_input" value="50">
             
             <label for="slider2">Slider 2</label>
             <input type="range" min="0" max="100" value="50" class="slider" id="slider2">
+            <span id="slider2_value">50</span> <!-- Muestra el valor del slider -->
             <input type="hidden" name="slider2" id="slider2_input" value="50">
 
             <label for="slider3">Slider 3</label>
             <input type="range" min="0" max="100" value="50" class="slider" id="slider3">
+            <span id="slider3_value">50</span> <!-- Muestra el valor del slider -->
             <input type="hidden" name="slider3" id="slider3_input" value="50">
 
             <label for="slider4">Slider 4</label>
             <input type="range" min="0" max="100" value="50" class="slider" id="slider4">
+            <span id="slider4_value">50</span> <!-- Muestra el valor del slider -->
             <input type="hidden" name="slider4" id="slider4_input" value="50">
         </div>
     </div>
@@ -231,6 +235,24 @@
         socket.onclose = function(event) {
             console.log("WebSocket cerrado:", event);
         };
+
+
+        function actualizarValorSlider(sliderId) {
+            const slider = document.getElementById(sliderId);
+            const valueDisplay = document.getElementById(sliderId + "_value");
+            
+            slider.addEventListener('input', function() {
+                valueDisplay.textContent = slider.value;
+            });
+        }
+
+
+        actualizarValorSlider('slider1');
+        actualizarValorSlider('slider2');
+        actualizarValorSlider('slider3');
+        actualizarValorSlider('slider4');
+
+
     
         // Función para capturar los valores de los sliders y enviarlos por WebSocket
         function enviarSliders() {
