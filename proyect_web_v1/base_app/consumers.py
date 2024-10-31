@@ -63,6 +63,12 @@ class CaptureConsumer(AsyncWebsocketConsumer):
                 'q1': q1,
                 'numerototal': numerototal
             }))
+        # Handle save_image action
+        elif action == 'save_image':
+            image_data = data['image']
+            # Save image on the server
+            self.save_image(image_data)
+            await self.send(text_data=json.dumps({'action': 'image_saved'}))    
 
     async def receive_celery(self, text_data):
         # This method can be designed to handle messages sent from Celery to the WebSocket
@@ -84,3 +90,13 @@ class CaptureConsumer(AsyncWebsocketConsumer):
             'q1': q1,
             'numerototal': numerototal
         }))
+
+    def save_image(self, image_data):
+        # Extraer el formato y el contenido de la imagen
+        format, imgstr = image_data.split(';base64,')
+        ext = format.split('/')[-1]
+        image_data = ContentFile(base64.b64decode(imgstr), name='capture.' + ext)
+        
+        # Guarda la imagen usando el almacenamiento por defecto de Django
+        file_path = default_storage.save(f'captured_images/capture.{ext}', image_data)
+        print(f'Imagen guardada en: {file_path}')    
