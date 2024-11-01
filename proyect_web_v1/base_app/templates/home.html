@@ -1,3 +1,5 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -142,30 +144,36 @@
 </head>
 <body>
 
+    <div class="static-images-container">
+        <h2>Imágenes desde Static:</h2>
+        <img src="{% static 'logos/download.jpeg' %}" alt="Imagen 1" class="imagen-capturada">
+        <img src="{% static 'logos/LOGO IPN.png' %}" alt="Imagen 2" class="imagen-capturada">
+    </div>
+
 
     <!-- Contenedor para el video y los sliders -->
     <div class="video-slider-container">
         <video id="video" autoplay></video>
         <div class="slider-container">
-            <h2>Configuración de Sliders:</h2>
-            <label for="slider1">Slider 1</label>
-            <input type="range" min="0" max="100" value="50" class="slider" id="slider1">
-            <span id="slider1_value">50</span> <!-- Muestra el valor del slider -->
+
+            <label for="slider1">Posicion Azimut</label>
+            <input type="range" min="1" max="100" value="1" class="slider" id="slider1">
+            <span id="slider1_value">1</span> <!-- Muestra el valor del slider -->
             <input type="hidden" name="slider1" id="slider1_input" value="50">
             
-            <label for="slider2">Slider 2</label>
-            <input type="range" min="0" max="100" value="50" class="slider" id="slider2">
-            <span id="slider2_value">50</span> <!-- Muestra el valor del slider -->
+            <label for="slider2">Posicion Altitud</label>
+            <input type="range" min="1" max="100" value="1" class="slider" id="slider2">
+            <span id="slider2_value">1</span> <!-- Muestra el valor del slider -->
             <input type="hidden" name="slider2" id="slider2_input" value="50">
 
-            <label for="slider3">Slider 3</label>
-            <input type="range" min="0" max="100" value="50" class="slider" id="slider3">
-            <span id="slider3_value">50</span> <!-- Muestra el valor del slider -->
+            <label for="slider3">Radio de la esferea</label>
+            <input type="range" min="1" max="100" value="1" class="slider" id="slider3">
+            <span id="slider3_value">1</span> <!-- Muestra el valor del slider -->
             <input type="hidden" name="slider3" id="slider3_input" value="50">
 
-            <label for="slider4">Slider 4</label>
-            <input type="range" min="0" max="100" value="50" class="slider" id="slider4">
-            <span id="slider4_value">50</span> <!-- Muestra el valor del slider -->
+            <label for="slider4">Posicion Roll</label>
+            <input type="range" min="1" max="100" value="1" class="slider" id="slider4">
+            <span id="slider4_value">1</span> <!-- Muestra el valor del slider -->
             <input type="hidden" name="slider4" id="slider4_input" value="50">
         </div>
     </div>
@@ -174,10 +182,10 @@
     <div class="radio-container">
         <span class="radio-label">Selecciona una opción:</span>
         <label for="radio1">
-            <input type="radio" name="options" id="radio1" value="1"> Opción 1
+            <input type="radio" name="options" id="radio1" value="1"> Modo 1
         </label>
         <label for="radio2">
-            <input type="radio" name="options" id="radio2" value="2"> Opción 2
+            <input type="radio" name="options" id="radio2" value="2"> Modo 2
         </label>
     </div>
 
@@ -185,13 +193,13 @@
     <div class="select-container">
         <label for="select-options">Selecciona una opción:</label>
         <select id="select-options">
-            <option value="opcion1">Opción 1</option>
-            <option value="opcion2">Opción 2</option>
-            <option value="opcion3">Opción 3</option>
-            <option value="opcion4">Opción 4</option>
+            <option value="opcion_27">27 imagenes</option>
+            <option value="opcion_50">50 imagenes</option>
+            <option value="opcion_70">70 imagenes</option>
         </select>
     </div>
 
+   
 
     <h2>Imágenes Capturadas:</h2>
     <div id="preview"></div>
@@ -247,6 +255,16 @@
         }
 
 
+        function obtenerOpcionSeleccionada() {
+            const opciones = document.getElementsByName('options');
+            for (const opcion of opciones) {
+                if (opcion.checked) {
+                    return opcion.value; 
+                }
+            }
+            return null; 
+        }
+
         actualizarValorSlider('slider1');
         actualizarValorSlider('slider2');
         actualizarValorSlider('slider3');
@@ -261,6 +279,11 @@
             const slider2Value = document.getElementById('slider2').value;
             const slider3Value = document.getElementById('slider3').value;
             const slider4Value = document.getElementById('slider4').value;
+
+            // Obtener los valores de los sliders
+            const radioValue = obtenerOpcionSeleccionada();
+
+            const selectValue = document.getElementById('select-options').value;
     
             // Crear un objeto con los valores de los sliders
             const data = {
@@ -270,7 +293,10 @@
                     slider2: slider2Value,
                     slider3: slider3Value,
                     slider4: slider4Value
-                }
+                },
+
+                radio_option: radioValue,
+                select_option: selectValue 
             };
     
             // Enviar los datos por WebSocket
