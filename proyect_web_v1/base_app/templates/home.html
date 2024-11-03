@@ -29,36 +29,86 @@
             margin-top: 20px;
         }
 
-        /* Contenedor principal para el video y sliders */
+  
         .video-slider-container {
-            display: flex; /* Aligna el video y los sliders en línea */
-            align-items: flex-start; /* Alinea verticalmente los elementos al inicio */
-            margin-bottom: 20px; /* Espacio entre esta sección y la siguiente */
+            display: flex;
+            justify-content: space-between; /* Alinea las imágenes en los extremos */
+            width: 600px; /* Ancho aumentado */
+            height: 600px; /* Alto aumentado */
+            padding: 10px;
+            position: absolute;
+            top: 200px; /* Ajusta esta distancia según lo que necesites */
+            right: 50px;
         }
 
-        /* Estilos para el video */
         #video {
-            width: 100%;
-            max-width: 600px;
-            border: 2px solid #00ffcc;
+            width: 100%; /* O mantiene un ancho específico, dependiendo de tu diseño */
+            border: 2px solid #030505;
             border-radius: 10px;
-            margin-right: 20px; /* Espacio entre el video y los sliders */
-            box-shadow: 0 0 20px #00ffcc;
+            box-shadow: 0 0 20px #3e4140;
+            margin-bottom: 20px; /* Espacio entre el video y los sliders */
+            position: absolute;
+            top: 30px; /* Ajusta esta distancia según lo que necesites */
         }
 
-        /* Contenedor para los sliders */
+        .logs-container {
+            display: flex;
+            flex-direction: column; /* Asegúrate de que los elementos se apilen verticalmente */
+            justify-content: flex-start; /* Alinea los elementos al inicio del contenedor */
+            align-items: flex-start; /* Alinea los elementos a la izquierda */
+            width: 1800px; /* Ancho del contenedor */
+            height: 200px; /* Altura ajustable según tus necesidades */
+            padding: 10px;
+            position: absolute; /* Permite posicionar el contenedor de manera específica */
+            bottom: 0; /* Coloca el contenedor en la parte inferior de la página */
+            box-shadow: 0 0 20px #626464; /* Sombra alrededor del contenedor */
+            background-color: rgba(255, 255, 255, 0.8); /* Fondo semitransparente (opcional) */
+        }
+
+        #log-messages {
+            overflow-y: auto;
+            height: 300px; /* Altura que necesites */
+            width: 1000px; /* Ancho del contenedor */
+            border: 1px solid #ccc;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+        
+
+        .console-label {
+            position: absolute; /* Posiciona el elemento de forma absoluta dentro del contenedor */
+            top: 1px; /* Ajusta según sea necesario para posicionar en la parte superior */
+            left: 1px; /* Ajusta según sea necesario para posicionar a la derecha */
+            font-size: 1.2rem; /* Ajusta el tamaño de fuente si es necesario */
+            background-color: #f0f0f0; /* Fondo del texto */
+            padding: 5px; /* Espacio alrededor del texto */
+            border-radius: 5px; /* Bordes redondeados (opcional) */
+            box-shadow: 0 0 5px #f0ebeb; /* Sombra alrededor del texto */
+        }
+
         .slider-container {
             display: flex;
-            flex-direction: column; /* Alinea los sliders verticalmente */
+            flex-direction: column;
+            width: 400px; /* Aumenta el ancho del contenedor según sea necesario */
+            border: 2px solid #3d3f3f;
+            border-radius: 10px;
+            box-shadow: 0 0 20px #626464;
+            padding: 10px; /* Añade padding para que los sliders no toquen el borde */
+            box-sizing: border-box; 
+            margin-left: 50px; /* Mantén el margen a la izquierda */
+            position: absolute; /* Posicionamiento absoluto */
+            left: 0; /* Alinea el contenedor al borde izquierdo */
         }
 
         .slider {
-            width: 200px; /* Ancho reducido para los sliders */
-            margin: 5px 0; /* Espaciado superior e inferior de cada slider */
+            width: 80%; /* Los sliders ocuparán el 80% del ancho del contenedor */
+            height: 40px; /* Alto aumentado de los sliders */
+            margin: 20px auto; /* Margen entre los sliders y centrado horizontalmente */
         }
-
+                                
         button {
-            background-color: #00ffcc;
+            background-color: #0ba520;
             color: #0a0a0a;
             border: none;
             border-radius: 5px;
@@ -67,11 +117,11 @@
             cursor: pointer;
             transition: background-color 0.3s, transform 0.3s;
             margin: 10px;
-            box-shadow: 0 0 10px #00ffcc;
+            box-shadow: 0 0 10px #16852e;
         }
 
         button:hover {
-            background-color: #00cc99;
+            background-color: #027716;
             transform: scale(1.05);
         }
 
@@ -79,9 +129,9 @@
         #preview {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 100px;
             justify-content: center;
-            margin-bottom: 20px; /* Espacio inferior */
+            margin-bottom: 20px;
         }
 
         .imagen-capturada {
@@ -97,33 +147,81 @@
             transform: scale(1.05);
         }
 
-        /* Estilos para los radio buttons */
         .radio-container {
-            display: flex; /* Alinea los radio buttons en línea */
-            align-items: center; /* Centra verticalmente */
-            margin: 10px 0; /* Espacio entre los radio buttons */
+            display: flex;
+            flex-direction: column; /* Cambiar a columna */
+            align-items: flex-start; /* Alinear a la izquierda */
+            margin: 10px 0; /* Espacio alrededor del contenedor */
+            box-shadow: 0 0 10px #585858;
+            border-radius: 5px;
+
+            /* Posicionamiento personalizado */
+            position: absolute; /* O relative, según lo que necesites */
+            top: 250px; /* Ajusta este valor para mover verticalmente */
+            left: 500px; /* Ajusta este valor para mover horizontalmente */
+
+            /* Aumentar el tamaño del contenedor */
+            padding: 20px; /* Añadir padding para aumentar el tamaño */
+            width: 250px; /* Ancho fijo del contenedor, ajusta según sea necesario */
+            /* height: auto; Si necesitas un alto específico, puedes definirlo aquí */
         }
 
         .radio-label {
-            margin-right: 10px; /* Espacio entre la etiqueta y el radio button */
-            font-size: 1.2rem;
+            margin-bottom: 10px; /* Espacio entre el label y los radio buttons */
+            font-size: 1.2rem; /* Ajusta el tamaño del texto si es necesario */
         }
 
-        input[type="radio"] {
-            margin-right: 5px; /* Espacio entre el radio button y el texto */
+        .radio-container label {
+            margin: 5px 0; /* Margen entre los radio buttons */
         }
+    
 
-        /* Estilo para el select */
         .select-container {
-            margin: 10px 0; /* Espacio superior e inferior del select */
+            margin: 10px 0; /* Espacio alrededor del contenedor */
+            box-shadow: 0 0 10px #585858; /* Sombra alrededor del contenedor */
+            border-radius: 5px; /* Esquinas redondeadas */
+            padding: 10px; /* Espacio interno para el contenedor */
+            
+            /* Posicionamiento personalizado */
+            position: absolute; /* Permite posicionar el contenedor de manera específica */
+            top: 250px; /* Ajusta este valor para mover verticalmente */
+            left: 900px; /* Ajusta este valor para mover horizontalmente */
         }
 
-        select {
-            font-size: 1rem; /* Tamaño de fuente */
-            padding: 5px; /* Espaciado interno */
-            border-radius: 5px; /* Esquinas redondeadas */
+
+        .select-container label {
+            display: block; /* Asegura que la etiqueta ocupe toda la línea */
+            margin-bottom: 5px; /* Espacio entre la etiqueta y el select */
+            font-size: 1.2rem; /* Ajusta el tamaño del texto si es necesario */
+        }
+
+        .select-container select {
+            display: block; /* Asegura que el select ocupe toda la línea */
+            width: 100%; /* Asegura que el select ocupe todo el ancho del contenedor */
+            padding: 5px; /* Espacio interno para el select */
             border: 1px solid #ccc; /* Borde del select */
-            box-shadow: 0 0 5px #00ffcc; /* Sombra del select */
+            border-radius: 5px; /* Esquinas redondeadas */
+            box-shadow: 0 0 5px #aaa; /* Sombra sutil alrededor del select */
+        }
+            
+        .static-images-container {
+            display: flex;
+            justify-content: space-between; /* Alinea las imágenes en los extremos */
+            width: 95%;
+            padding: 10px;
+            position: absolute;
+            top: 20px; 
+           
+        }
+
+
+        .static-images-container .imagen-capturada {
+            width: 135px; /* Ancho aumentado */
+            height: 135px; /* Alto aumentado */
+            object-fit: cover;
+            border-radius: 10px;
+            box-shadow: 0 0 10px #010a08;
+            transition: transform 0.3s;
         }
 
         @media (max-width: 600px) {
@@ -137,7 +235,7 @@
                 width: 100%;
             }
             .slider {
-                width: 150px; /* Ajuste para pantallas pequeñas */
+                width: 150px;
             }
         }
     </style>
@@ -145,37 +243,42 @@
 <body>
 
     <div class="static-images-container">
-        <h2>Imágenes desde Static:</h2>
         <img src="{% static 'logos/download.jpeg' %}" alt="Imagen 1" class="imagen-capturada">
         <img src="{% static 'logos/LOGO IPN.png' %}" alt="Imagen 2" class="imagen-capturada">
     </div>
+
+    <div class="logs-container">
+        
+        <div id="log-messages" style="overflow-y: auto; height: 300px; border: 1px solid #ccc; padding: 10px; background-color: #f9f9f9;"></div>
+    </div>
+
 
 
     <!-- Contenedor para el video y los sliders -->
     <div class="video-slider-container">
         <video id="video" autoplay></video>
-        <div class="slider-container">
+    </div>
 
-            <label for="slider1">Posicion Azimut</label>
-            <input type="range" min="1" max="100" value="1" class="slider" id="slider1">
-            <span id="slider1_value">1</span> <!-- Muestra el valor del slider -->
-            <input type="hidden" name="slider1" id="slider1_input" value="50">
-            
-            <label for="slider2">Posicion Altitud</label>
-            <input type="range" min="1" max="100" value="1" class="slider" id="slider2">
-            <span id="slider2_value">1</span> <!-- Muestra el valor del slider -->
-            <input type="hidden" name="slider2" id="slider2_input" value="50">
+    <div class="slider-container">
+        <label for="slider1">Posicion Azimut</label>
+        <input type="range" min="1" max="100" value="1" class="slider" id="slider1">
+        <span id="slider1_value">1</span> <!-- Muestra el valor del slider -->
+        <input type="hidden" name="slider1" id="slider1_input" value="50">
+        
+        <label for="slider2">Posicion Altitud</label>
+        <input type="range" min="1" max="100" value="1" class="slider" id="slider2">
+        <span id="slider2_value">1</span> <!-- Muestra el valor del slider -->
+        <input type="hidden" name="slider2" id="slider2_input" value="50">
 
-            <label for="slider3">Radio de la esferea</label>
-            <input type="range" min="1" max="100" value="1" class="slider" id="slider3">
-            <span id="slider3_value">1</span> <!-- Muestra el valor del slider -->
-            <input type="hidden" name="slider3" id="slider3_input" value="50">
+        <label for="slider3">Radio de la esferea</label>
+        <input type="range" min="1" max="100" value="1" class="slider" id="slider3">
+        <span id="slider3_value">1</span> <!-- Muestra el valor del slider -->
+        <input type="hidden" name="slider3" id="slider3_input" value="50">
 
-            <label for="slider4">Posicion Roll</label>
-            <input type="range" min="1" max="100" value="1" class="slider" id="slider4">
-            <span id="slider4_value">1</span> <!-- Muestra el valor del slider -->
-            <input type="hidden" name="slider4" id="slider4_input" value="50">
-        </div>
+        <label for="slider4">Posicion Roll</label>
+        <input type="range" min="1" max="100" value="1" class="slider" id="slider4">
+        <span id="slider4_value">1</span> <!-- Muestra el valor del slider -->
+        <input type="hidden" name="slider4" id="slider4_input" value="50">
     </div>
 
     <!-- Contenedor para los radio buttons -->
@@ -201,12 +304,12 @@
 
    
 
-    <h2>Imágenes Capturadas:</h2>
+   
     <div id="preview"></div>
 
     <form action="" method="post">
         {% csrf_token %}
-        <button type="submit">Iniciar captura de imágenes</button>
+        <button type="submit">Iniciar captura</button>
     </form>
 
     {% if resultado %}
@@ -217,34 +320,47 @@
     <script>
         // Habilitamos el canal del WebSocket
         const socket = new WebSocket('ws://localhost:80/ws/capture/');
-    
+        
         // Manejador de la conexión WebSocket
         socket.onopen = function(event) {
             console.log("Conectado al WebSocket");
+            agregarLog("Conectado al WebSocket");
         };
-    
+        
         // Manejador de mensajes desde el WebSocket
         socket.onmessage = function(event) {
             const data = JSON.parse(event.data);
             console.log("Mensaje del servidor:", data);
-    
+            agregarLog("Mensaje del servidor: " + JSON.stringify(data));
+        
             // Si el mensaje del servidor confirma que la imagen fue guardada
             if (data.action === 'image_saved') {
                 alert("Imagen guardada correctamente.");
+                agregarLog("Imagen guardada correctamente.");
             }
         };
-    
+        
         // Manejador de errores
         socket.onerror = function(error) {
             console.error("WebSocket Error:", error);
+            agregarLog("Error en WebSocket: " + error.message);
         };
-    
+        
         // Manejador para el cierre del WebSocket
         socket.onclose = function(event) {
             console.log("WebSocket cerrado:", event);
+            agregarLog("WebSocket cerrado: " + event.reason);
         };
-
-
+    
+        // Función para agregar logs al contenedor de logs
+        function agregarLog(mensaje) {
+            const logContainer = document.getElementById('log-messages');
+            const nuevoLog = document.createElement('div');
+            nuevoLog.textContent = mensaje;
+            logContainer.appendChild(nuevoLog);
+            logContainer.scrollTop = logContainer.scrollHeight; // Desplazar hacia abajo para mostrar el último mensaje
+        }
+    
         function actualizarValorSlider(sliderId) {
             const slider = document.getElementById(sliderId);
             const valueDisplay = document.getElementById(sliderId + "_value");
@@ -253,8 +369,7 @@
                 valueDisplay.textContent = slider.value;
             });
         }
-
-
+    
         function obtenerOpcionSeleccionada() {
             const opciones = document.getElementsByName('options');
             for (const opcion of opciones) {
@@ -264,13 +379,11 @@
             }
             return null; 
         }
-
+    
         actualizarValorSlider('slider1');
         actualizarValorSlider('slider2');
         actualizarValorSlider('slider3');
         actualizarValorSlider('slider4');
-
-
     
         // Función para capturar los valores de los sliders y enviarlos por WebSocket
         function enviarSliders() {
@@ -279,12 +392,11 @@
             const slider2Value = document.getElementById('slider2').value;
             const slider3Value = document.getElementById('slider3').value;
             const slider4Value = document.getElementById('slider4').value;
-
+    
             // Obtener los valores de los sliders
             const radioValue = obtenerOpcionSeleccionada();
-
             const selectValue = document.getElementById('select-options').value;
-    
+        
             // Crear un objeto con los valores de los sliders
             const data = {
                 action: 'start_capture',
@@ -294,22 +406,21 @@
                     slider3: slider3Value,
                     slider4: slider4Value
                 },
-
                 radio_option: radioValue,
                 select_option: selectValue 
             };
-    
+        
             // Enviar los datos por WebSocket
             socket.send(JSON.stringify(data));
+            agregarLog("Datos enviados: " + JSON.stringify(data)); // Log de los datos enviados
         }
-    
+        
         // Manejador del evento click del botón para iniciar la captura
         document.querySelector('button[type="submit"]').addEventListener('click', function(event) {
             event.preventDefault(); // Prevenir el envío del formulario
             enviarSliders();
         });
     </script>
-
 
 
 
