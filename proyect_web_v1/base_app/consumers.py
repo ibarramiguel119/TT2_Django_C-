@@ -1,4 +1,3 @@
-
 import json
 import base64
 from channels.generic.websocket import AsyncWebsocketConsumer
@@ -8,8 +7,6 @@ from.tasks import procesar_datos
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 import logging
-import os
-from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +16,6 @@ class CaptureConsumer(AsyncWebsocketConsumer):
         # Connect the consumer to the WebSocket group
         await self.channel_layer.group_add("capture_group", self.channel_name)
         await self.accept()
-        self.capture_folder = None  # Variable para guardar el nombre de la carpeta de sesión actual
 
     async def disconnect(self, close_code):
         # Remove the consumer from the WebSocket group
@@ -30,15 +26,9 @@ class CaptureConsumer(AsyncWebsocketConsumer):
         data = json.loads(text_data)
         logger.info(f"Received data: {data}")  # Logging the received data for debugging
         action = data.get('action')
-        
 
         # Handle start_capture action
         if action == 'start_capture':
-            # Crear una carpeta para la nueva sesión de captura usando timestamp
-            self.capture_folder = f"captured_images/session_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-            capture_folder_path = default_storage.path(self.capture_folder)
-            os.makedirs(capture_folder_path, exist_ok=True)  # Asegúrate de que la carpeta se crea
-
 
             radio_option = data.get('radio_option', None)  # Obtiene el valor del radio button
 
@@ -80,7 +70,7 @@ class CaptureConsumer(AsyncWebsocketConsumer):
                         'action': 'data_select_27',
                         'select_option':select_option,
                     }))
-                    procesar_datos.delay(Naltitud, Nzimut, NRoll, Radio)
+                    procesar_datos.delay(Naltitud, Nzimut, Radio,NRoll)
 
 
                 elif select_option=="opcion_50":
@@ -92,7 +82,7 @@ class CaptureConsumer(AsyncWebsocketConsumer):
                         'action': 'data_select_50',
                         'select_option':select_option,
                     }))
-                    procesar_datos.delay(Naltitud, Nzimut, NRoll, Radio)
+                    procesar_datos.delay(Naltitud, Nzimut, Radio,NRoll)
 
                 elif select_option == "opcion_70":
                     Naltitud=3
@@ -103,8 +93,10 @@ class CaptureConsumer(AsyncWebsocketConsumer):
                         'action': 'data_select_70',
                         'select_option':select_option,
                     }))
-                    procesar_datos.delay(Naltitud, Nzimut, NRoll, Radio)
+                    procesar_datos.delay(Naltitud, Nzimut, Radio,NRoll)
 
+
+            
 
         # Handle captura.imagen action
         elif action == 'captura.imagen':
@@ -147,29 +139,12 @@ class CaptureConsumer(AsyncWebsocketConsumer):
             'numerototal': numerototal
         }))
 
-    
     def save_image(self, image_data):
-        if not self.capture_folder:
-            logger.error("Capture folder not set. Cannot save image.")
-            return
-
-        # Verificar si la carpeta de captura existe y crearla si no existe
-        capture_folder_path = default_storage.path(self.capture_folder)
-        if not os.path.exists(capture_folder_path):
-            os.makedirs(capture_folder_path, exist_ok=True)
-
         # Extraer el formato y el contenido de la imagen
-        try:
-            format, imgstr = image_data.split(';base64,')
-            ext = format.split('/')[-1]
-            image_data = ContentFile(base64.b64decode(imgstr), name='capture.' + ext)
-
-            # Generar un nombre de archivo único usando un timestamp
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S%f')  # Genera un timestamp único
-            file_name = f'{self.capture_folder}/capture_{timestamp}.{ext}'  # Nombre de archivo único
-
-            # Guarda la imagen usando el almacenamiento por defecto de Django
-            file_path = default_storage.save(file_name, image_data)
-            logger.info(f'Imagen guardada en: {file_path}')  # Cambiado de print a logger
-        except Exception as e:
-            logger.error(f'Error al guardar la imagen: {e}')        
+        format, imgstr = image_data.split(';base64,')
+        ext = format.split('/')[-1]
+        image_data = ContentFile(base64.b64decode(imgstr), name='capture.' + ext)
+        
+        # Guarda la imagen usando el almacenamiento por defecto de Django
+        file_path = default_storage.save(f'captured_images/capture.{ext}', image_data)
+        print(f'Imagen guardada en: {file_path}')    
