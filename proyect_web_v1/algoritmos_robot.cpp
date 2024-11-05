@@ -138,6 +138,8 @@ int abrirPuertoSerie(const std::string& puertoEspecifico) {
     cfsetospeed(&options, B115200);  // Velocidad de salida
     options.c_cflag |= (CLOCAL | CREAD);
     tcsetattr(fd, TCSANOW, &options);
+
+    tcflush(fd, TCIOFLUSH); // Limpia tanto el búfer de entrada como el de salida
     
     return fd;
 }

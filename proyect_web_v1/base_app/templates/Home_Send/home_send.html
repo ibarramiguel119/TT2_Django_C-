@@ -12,7 +12,9 @@
         const messagesDiv = document.getElementById('messages');
 
         // Establece la conexión WebSocket con el servidor
-        const socket = new WebSocket('ws://localhost:80/ws/capture/');
+        //const socket = new WebSocket('ws://localhost:80/ws/capture/');
+        const socket = new WebSocket('wss://882f-200-92-166-60.ngrok-free.app/ws/capture/');//Cambiar el url que Ngrot genera en cada rinicio de servidor
+
 
         // Evento que se ejecuta cuando la conexión se establece correctamente
         socket.onopen = function(event) {
