@@ -22,7 +22,6 @@
 #include <termios.h>    // Configuración del puerto serie
 
 
-
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
@@ -150,12 +149,24 @@ void cerrarPuertoSerie(int fd) {
 }
 
 // Función para enviar datos a través del puerto serie en Linux
+// Función para enviar datos carácter por carácter en Linux
 bool enviarDatosCaracterPorCaracter(int fd, const std::string& datosAEnviar) {
     for (char c : datosAEnviar) {
+        // Enviar carácter por carácter y verificar éxito
         if (write(fd, &c, 1) != 1) {
+            std::cerr << "Error al enviar carácter: " << c << std::endl;
             return false;
+        } else {
+            std::cout << "Carácter enviado: " << c << " (" << static_cast<int>(c) << ")" << std::endl;
         }
     }
+
+    // Vaciar el buffer de salida para asegurar la transmisión
+    if (tcdrain(fd) == -1) {  // tcdrain espera hasta que todos los datos se hayan transmitido
+        std::cerr << "Error al vaciar el buffer del puerto serie." << std::endl;
+        return false;
+    }
+
     return true;
 }
 
