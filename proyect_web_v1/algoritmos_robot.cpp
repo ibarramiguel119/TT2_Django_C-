@@ -22,6 +22,11 @@
 #include <termios.h>    // Configuración del puerto serie
 
 
+ // para write()
+#include <cstring>   
+#include <cerrno>     
+
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
@@ -30,34 +35,44 @@
 
 
 namespace py = pybind11;
-
-
-
-//Definiciones de prototipos 
-int abrirPuertoSerie(const std::string& puertoEspecifico);
+int abrirPuertoSerie(const std::string& puerto); 
 double radianes_a_grados(double radianes);
 double gradosARadianes(double grados);
 std::tuple<double, double, double> sph2cart(double r, double theta, double phi);
 std::vector<double> generarPuntos(int start, int end, int new_roll);
-
 extern "C" {
     std::string floatToString(float value, int precision);
 }
-
-
 bool enviarDatosCaracterPorCaracter(int serial_fd, const std::string& datos);
 std::string recibirDatosBloqueante(int serial_fd);
 void cerrarPuertoSerie(int serial_fd);
 std::vector<double> grados_a_radianes(const std::vector<int>& grados);
-
-
-
-
+bool enviarDatos(int fd, const std::string& datos);
 void printVectorOfVectors(const std::vector<std::vector<int>>& vec);
 void delaySeconds(int seconds);
 
 
 
+
+
+
+// Función para enviar la cadena completa en lugar de carácter por carácter
+bool enviarDatos(int fd, const std::string& datos) {
+    ssize_t bytesEnviados = write(fd, datos.c_str(), datos.size());
+    
+    if (bytesEnviados != static_cast<ssize_t>(datos.size())) {
+        std::cerr << "Error al enviar datos: " << strerror(errno) << std::endl;
+        return false;
+    }
+    
+    // Vaciar el buffer de salida para asegurar la transmisión
+    if (tcdrain(fd) == -1) {  // tcdrain espera hasta que todos los datos se hayan transmitido
+        std::cerr << "Error al vaciar el buffer del puerto serie." << std::endl;
+        return false;
+    }
+    
+    return true;
+}
 
 
 
@@ -123,30 +138,83 @@ std::vector<std::vector<int>> CalcularPuntosMovimiento(const std::vector<int>& a
 
 
 
-// Función para abrir el puerto serie en Linux
-int abrirPuertoSerie(const std::string& puertoEspecifico) {
-    int fd = open(puertoEspecifico.c_str(), O_RDWR | O_NOCTTY);
-    if (fd == -1) {
-        std::cerr << "Error al abrir el puerto " << puertoEspecifico << std::endl;
+int abrirPuertoSerie(const std::string& puerto) {
+    // Abre el puerto serie
+    int serial_fd = open(puerto.c_str(), O_RDWR | O_NOCTTY | O_SYNC);
+    if (serial_fd == -1) {
+        std::cerr << "Error al abrir el puerto serie " << puerto << ": " << strerror(errno) << std::endl;
         return -1;
     }
-    
-    struct termios options;
-    tcgetattr(fd, &options);
-    cfsetispeed(&options, B115200);  // Velocidad de entrada
-    cfsetospeed(&options, B115200);  // Velocidad de salida
-    options.c_cflag |= (CLOCAL | CREAD);
-    tcsetattr(fd, TCSANOW, &options);
 
-    tcflush(fd, TCIOFLUSH); // Limpia tanto el búfer de entrada como el de salida
-    
-    return fd;
+    // Configuración del puerto serie con termios
+    struct termios serial_options;
+    memset(&serial_options, 0, sizeof(serial_options));
+
+    // Obtener los parámetros actuales del puerto serie
+    if (tcgetattr(serial_fd, &serial_options) != 0) {
+        std::cerr << "Error al obtener la configuración del puerto serie: " << strerror(errno) << std::endl;
+        close(serial_fd);
+        return -1;
+    }
+
+    // Configuración de los parámetros del puerto
+    cfsetispeed(&serial_options, B115200);  // Velocidad de entrada (115200 baudios)
+    cfsetospeed(&serial_options, B115200);  // Velocidad de salida (115200 baudios)
+
+    serial_options.c_cflag &= ~PARENB;     // Sin paridad
+    serial_options.c_cflag &= ~CSTOPB;     // 1 bit de parada
+    serial_options.c_cflag &= ~CSIZE;      // Limpiar tamaño de bits
+    serial_options.c_cflag |= CS8;         // 8 bits de datos
+
+
+    // Aplicar la configuración al puerto
+    if (tcsetattr(serial_fd, TCSANOW, &serial_options) != 0) {
+        std::cerr << "Error al configurar el puerto serie: " << strerror(errno) << std::endl;
+        close(serial_fd);
+        return -1;
+    }
+
+    // Limpiar los buffers de entrada y salida
+    tcflush(serial_fd, TCIOFLUSH);
+
+    return serial_fd;
 }
+
 
 // Función para cerrar el puerto serie en Linux
 void cerrarPuertoSerie(int fd) {
     close(fd);
 }
+
+
+// Función para enviar "hola ingeniero" de forma periódica
+void enviar_mensaje_periodico() {
+    // Configuración del puerto serie en Linux
+    std::string puertoEspecifico = "/dev/ttyUSB0";  // Cambiar al puerto serie específico en Linux
+    int serial_fd = abrirPuertoSerie(puertoEspecifico);
+
+
+    if (serial_fd == -1) {
+        std::cerr << "Error al abrir el puerto serie" << std::endl;
+        return;
+    }
+    
+    std::string mensaje = "1";
+    
+    while (true) {
+        if (enviarDatos(serial_fd, mensaje)) {
+            std::cout << "Mensaje enviado: " << mensaje << std::endl;
+        } else {
+            std::cerr << "Error al enviar el mensaje." << std::endl;
+            break;
+        }
+        usleep(100000); // Espera intervalo_ms milisegundos
+    }
+
+    cerrarPuertoSerie(serial_fd);
+}
+
+
 
 // Función para enviar datos a través del puerto serie en Linux
 // Función para enviar datos carácter por carácter en Linux
@@ -284,9 +352,28 @@ std::vector<std::vector<int>> CalcularPuntosCinematicaInversa(const std::vector<
 
     auto numerototal = si * new_roll;
 
+
+
+    while(1){
+
+        std::string mensaje = "hola";
+        if (enviarDatosCaracterPorCaracter(serial_fd, mensaje)) {
+            std::cout << "Mensaje enviado: " << mensaje << std::endl;
+        } else {
+            std::cerr << "Error al enviar el mensaje 'hola'." << std::endl;
+        }
+    }
+ 
+
+
     while (n <= si) {
         std::vector<int> temp = result[n];
         auto x = slider0Value;
+
+
+
+
+       
 
         std::cout << "Slider value: " << slider0Value << std::endl;
         std::cout << "Temp vector: ";
@@ -321,6 +408,8 @@ std::vector<std::vector<int>> CalcularPuntosCinematicaInversa(const std::vector<
             std::string q4_str = floatToString(q4, 4);
             std::string q5_str = floatToString(q5, 4);
             std::string datosAEnviar = q1_str + "a" + q2_str + "b" + q3_str + "c" + q4_str + "d" + q5_str + ">";
+
+
 
             auto grados1 = radianes_a_grados(q1);
             std::cout << "Grados de q1: " << grados1 << std::endl;
@@ -409,14 +498,11 @@ void procesarDatos(int slider1Value, int slider0Value, int slider2Value,int new_
 
 
 
-
-
-
-
-
 // Módulo que expone las funciones del Robot 
 PYBIND11_MODULE(algoritmos_robot, m) {
     m.def("suma", &suma, "Una función que suma dos números");
+
+    m.def("enviar_mensaje_periodico",&enviar_mensaje_periodico, "Una funcion que envia los datos por serial");
 
     m.def("calcular_grados", [](int Altitud, int Asimuth, int Roll) {
         int GAltitude, GAsimut, GRoll;

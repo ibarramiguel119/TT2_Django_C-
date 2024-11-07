@@ -30,6 +30,8 @@ urlpatterns = [
     path('suma/', views.suma_view, name='suma'),
     
     path('calcular-grados/', views.calcular_grados_view, name='calcular_grados'),
+
+    path('enviar_datos_serial/',views.send_data,name='Enviar_datos ')
     
 ]+ static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)
 

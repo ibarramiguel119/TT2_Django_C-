@@ -35,6 +35,14 @@ def suma_view(request):
     return JsonResponse({'resultado': resultado})
 
 
+def send_data(request):
+    data_send=algoritmos_robot.enviar_mensaje_periodico()
+    return JsonResponse({'resultado':data_send})
+
+
+
+
+
 
 
 def calcular_grados_view(request):
