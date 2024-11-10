@@ -206,7 +206,7 @@ bool enviarCadena(int fd, const char* cadena) {
             std::cerr << "Error al enviar el carácter: " << cadena[i] << std::endl;
             break;
         }
-        usleep(100000);  // Espera de 1 ms entre caracteres (ajustable)
+        usleep(9000);  // Espera de 1 ms entre caracteres (ajustable)
     }
 
     // Esperar a que se vacíe el buffer de transmisión
