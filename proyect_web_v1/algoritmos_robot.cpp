@@ -32,10 +32,10 @@
 #endif
 
 
-
-
 namespace py = pybind11;
-int abrirPuertoSerie(const std::string& puerto); 
+
+
+int abrirPuertoSerie(const char* puerto);
 double radianes_a_grados(double radianes);
 double gradosARadianes(double grados);
 std::tuple<double, double, double> sph2cart(double r, double theta, double phi);
@@ -50,6 +50,7 @@ std::vector<double> grados_a_radianes(const std::vector<int>& grados);
 bool enviarDatos(int fd, const std::string& datos);
 void printVectorOfVectors(const std::vector<std::vector<int>>& vec);
 void delaySeconds(int seconds);
+bool enviarCadena(int fd, const char* cadena);
 
 
 
@@ -73,8 +74,6 @@ bool enviarDatos(int fd, const std::string& datos) {
     
     return true;
 }
-
-
 
 
 // Definición de la función suma
@@ -136,48 +135,34 @@ std::vector<std::vector<int>> CalcularPuntosMovimiento(const std::vector<int>& a
 }
 
 
-
-
-int abrirPuertoSerie(const std::string& puerto) {
-    // Abre el puerto serie
-    int serial_fd = open(puerto.c_str(), O_RDWR | O_NOCTTY | O_SYNC);
-    if (serial_fd == -1) {
-        std::cerr << "Error al abrir el puerto serie " << puerto << ": " << strerror(errno) << std::endl;
+int abrirPuertoSerie(const char* puerto) {
+    // Abrir el puerto serial
+    int fd = open(puerto, O_RDWR | O_NOCTTY | O_SYNC);
+    if (fd == -1) {
+        std::cerr << "Error al abrir el puerto serial." << std::endl;
         return -1;
     }
 
-    // Configuración del puerto serie con termios
-    struct termios serial_options;
-    memset(&serial_options, 0, sizeof(serial_options));
+    // Configurar el puerto serial
+    struct termios options;
+    tcgetattr(fd, &options);
 
-    // Obtener los parámetros actuales del puerto serie
-    if (tcgetattr(serial_fd, &serial_options) != 0) {
-        std::cerr << "Error al obtener la configuración del puerto serie: " << strerror(errno) << std::endl;
-        close(serial_fd);
-        return -1;
-    }
+    // Configuraciones del puerto
+    options.c_cflag &= ~PARENB;        // Sin paridad
+    options.c_cflag &= ~CSTOPB;        // 1 bit de parada
+    options.c_cflag &= ~CSIZE;         // Limpiar tamaño de bits
+    options.c_cflag |= CS8;            // 8 bits de datos
+    options.c_cflag |= CLOCAL;         // Ignorar líneas de control de módem
+    options.c_cflag |= CREAD;          // Habilitar la recepción de datos
 
-    // Configuración de los parámetros del puerto
-    cfsetispeed(&serial_options, B115200);  // Velocidad de entrada (115200 baudios)
-    cfsetospeed(&serial_options, B115200);  // Velocidad de salida (115200 baudios)
+    // Configurar velocidad de transmisión a 115200
+    cfsetispeed(&options, B230400);
+    cfsetospeed(&options, B230400);
 
-    serial_options.c_cflag &= ~PARENB;     // Sin paridad
-    serial_options.c_cflag &= ~CSTOPB;     // 1 bit de parada
-    serial_options.c_cflag &= ~CSIZE;      // Limpiar tamaño de bits
-    serial_options.c_cflag |= CS8;         // 8 bits de datos
+    // Aplicar configuraciones inmediatamente
+    tcsetattr(fd, TCSANOW, &options);
 
-
-    // Aplicar la configuración al puerto
-    if (tcsetattr(serial_fd, TCSANOW, &serial_options) != 0) {
-        std::cerr << "Error al configurar el puerto serie: " << strerror(errno) << std::endl;
-        close(serial_fd);
-        return -1;
-    }
-
-    // Limpiar los buffers de entrada y salida
-    tcflush(serial_fd, TCIOFLUSH);
-
-    return serial_fd;
+    return fd;
 }
 
 
@@ -185,35 +170,6 @@ int abrirPuertoSerie(const std::string& puerto) {
 void cerrarPuertoSerie(int fd) {
     close(fd);
 }
-
-
-// Función para enviar "hola ingeniero" de forma periódica
-void enviar_mensaje_periodico() {
-    // Configuración del puerto serie en Linux
-    std::string puertoEspecifico = "/dev/ttyUSB0";  // Cambiar al puerto serie específico en Linux
-    int serial_fd = abrirPuertoSerie(puertoEspecifico);
-
-
-    if (serial_fd == -1) {
-        std::cerr << "Error al abrir el puerto serie" << std::endl;
-        return;
-    }
-    
-    std::string mensaje = "1";
-    
-    while (true) {
-        if (enviarDatos(serial_fd, mensaje)) {
-            std::cout << "Mensaje enviado: " << mensaje << std::endl;
-        } else {
-            std::cerr << "Error al enviar el mensaje." << std::endl;
-            break;
-        }
-        usleep(100000); // Espera intervalo_ms milisegundos
-    }
-
-    cerrarPuertoSerie(serial_fd);
-}
-
 
 
 // Función para enviar datos a través del puerto serie en Linux
@@ -234,9 +190,30 @@ bool enviarDatosCaracterPorCaracter(int fd, const std::string& datosAEnviar) {
         std::cerr << "Error al vaciar el buffer del puerto serie." << std::endl;
         return false;
     }
+    usleep(10000);  // Espera entre caracteres
 
     return true;
 }
+
+
+////Enviar los datos prueba del sistema de manera como en la prueba C++ 
+// Función para enviar una cadena de texto por el puerto serial
+bool enviarCadena(int fd, const char* cadena) {
+    int longitud = strlen(cadena);
+    for (int i = 0; i < longitud; i++) {
+        // Enviar carácter por carácter
+        if (write(fd, &cadena[i], 1) != 1) {
+            std::cerr << "Error al enviar el carácter: " << cadena[i] << std::endl;
+            break;
+        }
+        usleep(100000);  // Espera de 1 ms entre caracteres (ajustable)
+    }
+
+    // Esperar a que se vacíe el buffer de transmisión
+    tcdrain(fd);
+    return true; // o false según el resultado de la operación
+}
+
 
 // Función para recibir datos de forma bloqueante en Linux
 std::string recibirDatosBloqueante(int fd) {
@@ -269,7 +246,6 @@ std::tuple<double, double, double> sph2cart(double azimuth, double elevation, do
     double z = radius * std::sin(elevation);
     return std::make_tuple(x, y, z);
 }
-
 
 //Genera puntos para la articulacion 5 
 std::vector<double> generarPuntos(int inicio, int fin, int num_puntos) {
@@ -342,8 +318,8 @@ std::vector<std::vector<int>> CalcularPuntosCinematicaInversa(const std::vector<
     int cont = 1;
 
     // Configuración del puerto serie en Linux
-    std::string puertoEspecifico = "/dev/ttyUSB0";  // Cambiar al puerto serie específico en Linux
-    int serial_fd = abrirPuertoSerie(puertoEspecifico);
+    const char* puerto = "/dev/ttyUSB0";  // Ajusta el puerto según tu dispositivo
+    int serial_fd = abrirPuertoSerie(puerto);
 
     if (serial_fd == -1) {
         std::cerr << "Error al abrir el puerto" << std::endl;
@@ -353,28 +329,9 @@ std::vector<std::vector<int>> CalcularPuntosCinematicaInversa(const std::vector<
     auto numerototal = si * new_roll;
 
 
-
-    while(1){
-
-        std::string mensaje = "hola";
-        if (enviarDatosCaracterPorCaracter(serial_fd, mensaje)) {
-            std::cout << "Mensaje enviado: " << mensaje << std::endl;
-        } else {
-            std::cerr << "Error al enviar el mensaje 'hola'." << std::endl;
-        }
-    }
- 
-
-
     while (n <= si) {
         std::vector<int> temp = result[n];
         auto x = slider0Value;
-
-
-
-
-       
-
         std::cout << "Slider value: " << slider0Value << std::endl;
         std::cout << "Temp vector: ";
         for (int elem : temp) {
@@ -414,7 +371,7 @@ std::vector<std::vector<int>> CalcularPuntosCinematicaInversa(const std::vector<
             auto grados1 = radianes_a_grados(q1);
             std::cout << "Grados de q1: " << grados1 << std::endl;
 
-            if (enviarDatosCaracterPorCaracter(serial_fd, datosAEnviar)) {
+            if (enviarCadena(serial_fd, datosAEnviar.c_str())) {
                 std::cout << "Datos enviados: " << datosAEnviar << std::endl;
                 std::string datosRecibidos = recibirDatosBloqueante(serial_fd);
                 if (!datosRecibidos.empty()) {
@@ -441,9 +398,6 @@ std::vector<std::vector<int>> CalcularPuntosCinematicaInversa(const std::vector<
     cerrarPuertoSerie(serial_fd);
     return D;
 }
-
-
-
 
 
 void procesarDatos(int slider1Value, int slider0Value, int slider2Value,int new_roll,py::function callback) {
@@ -501,8 +455,6 @@ void procesarDatos(int slider1Value, int slider0Value, int slider2Value,int new_
 // Módulo que expone las funciones del Robot 
 PYBIND11_MODULE(algoritmos_robot, m) {
     m.def("suma", &suma, "Una función que suma dos números");
-
-    m.def("enviar_mensaje_periodico",&enviar_mensaje_periodico, "Una funcion que envia los datos por serial");
 
     m.def("calcular_grados", [](int Altitud, int Asimuth, int Roll) {
         int GAltitude, GAsimut, GRoll;
