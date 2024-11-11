@@ -8,7 +8,11 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 import logging
 
+from asgiref.sync import sync_to_async
+
+
 logger = logging.getLogger(__name__)
+
 
 
 class CaptureConsumer(AsyncWebsocketConsumer):
@@ -32,7 +36,7 @@ class CaptureConsumer(AsyncWebsocketConsumer):
 
             radio_option = data.get('radio_option', None)  # Obtiene el valor del radio button
 
-            if radio_option=='1':
+            if radio_option == '1':
             
                 sliders = data.get('sliders', {})
                 slider1 = int(sliders.get('slider1', 0))
@@ -49,73 +53,70 @@ class CaptureConsumer(AsyncWebsocketConsumer):
                         'slider3': slider3,
                         'slider4': slider4
                     },
-                    'radio_buton':radio_option,
+                    'radio_button': radio_option,
                 }))
 
                 # Send capture request to Celery
                 procesar_datos.delay(slider1, slider2, slider3, slider4)
-            elif radio_option=='2':
+            elif radio_option == '2':
                 select_option = data.get('select_option') 
                 
                 await self.send(text_data=json.dumps({
-                    'action': 'data_recibe',
-                    'select_option':select_option,
+                    'action': 'data_received',
+                    'select_option': select_option,
                 }))
-                if select_option=="opcion_27":
-                    Naltitud=3
-                    Nzimut=3
-                    NRoll=3
-                    Radio=150
+                if select_option == "opcion_27":
+                    Naltitud = 3
+                    Nzimut = 3
+                    NRoll = 3
+                    Radio = 150
                     await self.send(text_data=json.dumps({
                         'action': 'data_select_27',
-                        'select_option':select_option,
+                        'select_option': select_option,
                     }))
-                    procesar_datos.delay(Naltitud, Nzimut, Radio,NRoll)
+                    procesar_datos.delay(Naltitud, Nzimut, Radio, NRoll)
 
-
-                elif select_option=="opcion_50":
-                    Naltitud=3
-                    Nzimut=3
-                    NRoll=3
-                    Radio=150
+                elif select_option == "opcion_50":
+                    Naltitud = 3
+                    Nzimut = 3
+                    NRoll = 3
+                    Radio = 150
                     await self.send(text_data=json.dumps({
                         'action': 'data_select_50',
-                        'select_option':select_option,
+                        'select_option': select_option,
                     }))
-                    procesar_datos.delay(Naltitud, Nzimut, Radio,NRoll)
+                    procesar_datos.delay(Naltitud, Nzimut, Radio, NRoll)
 
                 elif select_option == "opcion_70":
-                    Naltitud=3
-                    Nzimut=3
-                    NRoll=3
-                    Radio=150
+                    Naltitud = 3
+                    Nzimut = 3
+                    NRoll = 3
+                    Radio = 150
                     await self.send(text_data=json.dumps({
                         'action': 'data_select_70',
-                        'select_option':select_option,
+                        'select_option': select_option,
                     }))
-                    procesar_datos.delay(Naltitud, Nzimut, Radio,NRoll)
+                    procesar_datos.delay(Naltitud, Nzimut, Radio, NRoll)
 
-
-            
-
-        # Handle captura.imagen action
+        # Handle capture.image action
         elif action == 'captura.imagen':
-            # Manejar el mensaje de captura de imagen
+            # Handle the capture image message
             message = data.get('message')
             q1 = data.get('q1', 0)
             numerototal = data.get('numerototal', 0)
 
-            # Envía el mensaje al cliente
+            # Send the message to the client
             await self.send(text_data=json.dumps({
                 'action': message,
                 'q1': q1,
                 'numerototal': numerototal
             }))
+        
         # Handle save_image action
         elif action == 'save_image':
             image_data = data['image']
-            # Save image on the server
-            self.save_image(image_data)
+            # Save the image on the server asynchronously
+            await self.save_image(image_data)
             await self.send(text_data=json.dumps({'action': 'image_saved'}))    
 
     async def receive_celery(self, text_data):
@@ -127,24 +128,29 @@ class CaptureConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps(data))
 
     async def captura_imagen(self, event):
-        # Manejar el mensaje de captura de imagen
+        # Handle the capture image message
         message = event['message']
         q1 = event.get('q1', 0)
         numerototal = event.get('numerototal', 0)
 
-        # Envía el mensaje al cliente
+        # Send the message to the client
         await self.send(text_data=json.dumps({
             'action': message,
             'q1': q1,
             'numerototal': numerototal
         }))
 
-    def save_image(self, image_data):
-        # Extraer el formato y el contenido de la imagen
+    async def save_image(self, image_data):
+        # Extract the format and content of the image
         format, imgstr = image_data.split(';base64,')
         ext = format.split('/')[-1]
-        image_data = ContentFile(base64.b64decode(imgstr), name='capture.' + ext)
-        
-        # Guarda la imagen usando el almacenamiento por defecto de Django
-        file_path = default_storage.save(f'captured_images/capture.{ext}', image_data)
-        print(f'Imagen guardada en: {file_path}')    
+        image_content = ContentFile(base64.b64decode(imgstr), name='capture.' + ext)
+
+        # Save the image asynchronously (with sync_to_async to run in a thread)
+        file_path = await sync_to_async(self._save_image)(image_content, ext)
+        print(f'Image saved at: {file_path}')  
+
+    def _save_image(self, image_content, ext):
+        # This method will save the image in Django storage
+        file_path = default_storage.save(f'captured_images/capture.{ext}', image_content)
+        return file_path

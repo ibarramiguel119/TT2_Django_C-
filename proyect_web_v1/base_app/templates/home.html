@@ -319,10 +319,9 @@
     
     <script>
         // Habilitamos el canal del WebSocket
-        const socket = new WebSocket('ws://localhost:80/ws/capture/');
-        //const socket = new WebSocket('wss://b082-189-239-58-13.ngrok-free.app/ws/capture/');//Cambiar el url que Ngrot genera en cada rinicio de servidor
-        
-        
+        // socket = new WebSocket('ws://localhost:80/ws/capture/');
+        //const socket = new WebSocket('wss://2d87-200-92-166-60.ngrok-free.app/ws/capture/');//Cambiar el url que Ngrot genera en cada rinicio de servidor
+        const socket = new WebSocket('wss://c0ff-200-92-166-60.ngrok-free.app/ws/capture/'); 
         // Manejador de la conexión WebSocket
         socket.onopen = function(event) {
             console.log("Conectado al WebSocket");
