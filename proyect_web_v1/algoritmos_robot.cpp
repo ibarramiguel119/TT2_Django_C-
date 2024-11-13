@@ -326,7 +326,7 @@ std::vector<std::vector<int>> CalcularPuntosCinematicaInversa(const std::vector<
         return D;  // Salir de la función si no se puede abrir el puerto
     }
 
-    auto numerototal = si * new_roll;
+    auto numerototal = si;
 
 
     while (n <= si) {
@@ -352,12 +352,13 @@ std::vector<std::vector<int>> CalcularPuntosCinematicaInversa(const std::vector<
 
         // Puntos generados para q5
         std::vector<double> puntos = generarPuntos(0, 180, new_roll);
+        if(cont <= (x + 1)/2){
 
-        for (double q5 : puntos) {
             auto q1 = atan(-px / py) + 3.1416;
             auto q2 = px * sin(q1) - py * cos(q1); 
             auto q3 = pz;
             auto q4 = atan(-(q2 + 515) / q3);
+            auto q5=90;
 
             std::string q1_str = floatToString(q1, 4);
             std::string q2_str = floatToString(q2, 4);
@@ -388,6 +389,43 @@ std::vector<std::vector<int>> CalcularPuntosCinematicaInversa(const std::vector<
                 std::cerr << "Error al enviar datos." << std::endl;
             }
         }
+        if(cont > (x + 1)/2 && cont <=x+2){
+            auto q1 = atan(-px / py);
+            auto q2 = px * sin(q1) - py * cos(q1); 
+            auto q3 = pz;
+            auto q4 = atan(-(q2 + 515) / q3);
+            auto q5=90;
+
+            std::string q1_str = floatToString(q1, 4);
+            std::string q2_str = floatToString(q2, 4);
+            std::string q3_str = floatToString(q3, 4);
+            std::string q4_str = floatToString(q4, 4);
+            std::string q5_str = floatToString(q5, 4);
+            std::string datosAEnviar = q1_str + "a" + q2_str + "b" + q3_str + "c" + q4_str + "d" + q5_str + ">";
+
+
+
+            auto grados1 = radianes_a_grados(q1);
+            std::cout << "Grados de q1: " << grados1 << std::endl;
+
+            if (enviarCadena(serial_fd, datosAEnviar.c_str())) {
+                std::cout << "Datos enviados: " << datosAEnviar << std::endl;
+                std::string datosRecibidos = recibirDatosBloqueante(serial_fd);
+                if (!datosRecibidos.empty()) {
+                    std::cout << "Datos recibidos: " << datosRecibidos << std::endl;
+                    if (datosRecibidos == "1") {
+                        py::gil_scoped_acquire acquire;
+                        callback(grados1, numerototal);
+                        py::gil_scoped_release release;
+                    }
+                } else {
+                    std::cout << "No se recibieron datos." << std::endl;
+                }
+            } else {
+                std::cerr << "Error al enviar datos." << std::endl;
+            }
+        }
+
         D.push_back(temp);
         n++;
         cont++;

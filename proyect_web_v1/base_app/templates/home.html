@@ -260,22 +260,22 @@
     </div>
 
     <div class="slider-container">
-        <label for="slider1">Posicion Azimut</label>
+        <label for="slider1">Posicion Altitud</label>
         <input type="range" min="1" max="100" value="1" class="slider" id="slider1">
         <span id="slider1_value">1</span> <!-- Muestra el valor del slider -->
         <input type="hidden" name="slider1" id="slider1_input" value="50">
         
-        <label for="slider2">Posicion Altitud</label>
+        <label for="slider2">Posicion Azimuth</label>
         <input type="range" min="1" max="100" value="1" class="slider" id="slider2">
         <span id="slider2_value">1</span> <!-- Muestra el valor del slider -->
         <input type="hidden" name="slider2" id="slider2_input" value="50">
 
-        <label for="slider3">Radio de la esferea</label>
+        <label for="slider3">Posicion Roll</label>
         <input type="range" min="1" max="100" value="1" class="slider" id="slider3">
         <span id="slider3_value">1</span> <!-- Muestra el valor del slider -->
         <input type="hidden" name="slider3" id="slider3_input" value="50">
 
-        <label for="slider4">Posicion Roll</label>
+        <label for="slider4">Radio de la esfera</label>
         <input type="range" min="1" max="100" value="1" class="slider" id="slider4">
         <span id="slider4_value">1</span> <!-- Muestra el valor del slider -->
         <input type="hidden" name="slider4" id="slider4_input" value="50">
@@ -312,6 +312,7 @@
         <button type="submit">Iniciar captura</button>
     </form>
 
+    
     {% if resultado %}
         <h2>Resultado de la Función:</h2>
         <p>{{ resultado }}</p>
@@ -319,9 +320,9 @@
     
     <script>
         // Habilitamos el canal del WebSocket
-        //socket = new WebSocket('ws://localhost:80/ws/capture/');
-        const socket = new WebSocket('wss://fe45-200-92-166-60.ngrok-free.app/ws/capture/');//Cambiar el url que Ngrot genera en cada rinicio de servidor
-       
+        
+        //const socket = new WebSocket('socket = new WebSocket('ws://localhost:80/ws/capture/');wss://4d6b-189-239-58-13.ngrok-free.app/ws/capture/');//Cambiar el url que Ngrot genera en cada rinicio de servidor
+        socket = new WebSocket('ws://localhost:80/ws/capture/');
         // Manejador de la conexión WebSocket
         socket.onopen = function(event) {
             console.log("Conectado al WebSocket");

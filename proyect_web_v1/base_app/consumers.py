@@ -66,7 +66,7 @@ class CaptureConsumer(AsyncWebsocketConsumer):
                 }))
 
                 # Send capture request to Celery
-                procesar_datos.delay(slider1, slider2, slider3, slider4)
+                procesar_datos.delay(slider1, slider2, slider4, slider3)
             elif radio_option == '2':
                 select_option = data.get('select_option') 
                 
