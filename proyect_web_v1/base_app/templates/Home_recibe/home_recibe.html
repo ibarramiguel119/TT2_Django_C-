@@ -10,7 +10,7 @@
     <video id="video" autoplay style="display: none;"></video>
 
     <script>
-        const socket = new WebSocket('wss://b1c7-200-92-166-60.ngrok-free.app/ws/capture/');
+        const socket = new WebSocket('wss://fe45-200-92-166-60.ngrok-free.app/ws/capture/');
         //socket = new WebSocket('ws://localhost:80/ws/capture/');
         socket.onopen = function(event) {
             console.log("Conectado al WebSocket:", event);
@@ -32,11 +32,27 @@
 
         function activarCamaraYCapturarImagen() {
             navigator.mediaDevices.getUserMedia({
-                video: { facingMode: "environment" } // Configuración para usar la cámara trasera
+                video: { facingMode: "environment" } // Usar cámara trasera
             })
             .then(stream => {
                 const video = document.getElementById("video");
                 video.srcObject = stream;
+
+                // Intentar activar el flash si es compatible
+                const track = stream.getVideoTracks()[0];
+                const capabilities = track.getCapabilities();
+                
+                // Verificar si el dispositivo soporta el uso de torch (flash)
+                if (capabilities.torch) {
+                    track.applyConstraints({
+                        advanced: [{ torch: true }]
+                    }).catch(error => {
+                        console.warn("No se pudo activar el flash:", error);
+                    });
+                } else {
+                    console.log("La linterna no es compatible con esta cámara o navegador.");
+                }
+
                 video.onloadedmetadata = () => {
                     capturarImagenComoBlob(stream);
                 };
