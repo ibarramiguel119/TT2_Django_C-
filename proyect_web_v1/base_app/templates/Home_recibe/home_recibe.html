@@ -10,8 +10,10 @@
     <video id="video" autoplay style="display: none;"></video>
 
     <script>
-        //const socket = new WebSocket('wss://4d6b-189-239-58-13.ngrok-free.app/ws/capture/');
-        socket = new WebSocket('ws://localhost:80/ws/capture/');  
+        //const socket = new WebSocket('wss://8b2c-189-239-58-13.ngrok-free.app/ws/capture/');
+
+        socket = new WebSocket('ws://localhost:80/ws/capture/'); 
+
         socket.onopen = function(event) {
             console.log("Conectado al WebSocket:", event);
         };

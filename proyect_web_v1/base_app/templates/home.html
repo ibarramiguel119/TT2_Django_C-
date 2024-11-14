@@ -322,7 +322,7 @@
         // Habilitamos el canal del WebSocket
         
         //const socket = new WebSocket('socket = new WebSocket('ws://localhost:80/ws/capture/');wss://4d6b-189-239-58-13.ngrok-free.app/ws/capture/');//Cambiar el url que Ngrot genera en cada rinicio de servidor
-        socket = new WebSocket('ws://localhost:80/ws/capture/');
+        socket = new WebSocket('ws://localhost:80/ws/capture/');  
         // Manejador de la conexión WebSocket
         socket.onopen = function(event) {
             console.log("Conectado al WebSocket");
@@ -334,6 +334,8 @@
             const data = JSON.parse(event.data);
             console.log("Mensaje del servidor:", data);
             agregarLog("Mensaje del servidor: " + JSON.stringify(data));
+            const imageUrl = data.image_url;
+            console.log("Hola",imageUrl)
         
             // Si el mensaje del servidor confirma que la imagen fue guardada
             if (data.action === 'image_saved') {
