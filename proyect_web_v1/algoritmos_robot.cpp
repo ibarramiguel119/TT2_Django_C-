@@ -293,6 +293,7 @@ double gradosARadianes(double grados) {
 
 /// Imprimir los datos del vector Result para comparar en matlab  
 void printVectorOfVectors(const std::vector<std::vector<int>>& vec) {
+    std::cout << "Tu vector resultante es:" << std::endl;
     for (const auto& innerVec : vec) {
         std::cout << '[';
         for (size_t i = 0; i < innerVec.size(); ++i) {
@@ -303,7 +304,7 @@ void printVectorOfVectors(const std::vector<std::vector<int>>& vec) {
         }
         std::cout << ']' << std::endl;
     }
-}
+} 
 
 void delaySeconds(int seconds) {
     std::this_thread::sleep_for(std::chrono::seconds(seconds));
@@ -354,8 +355,8 @@ std::vector<std::vector<int>> CalcularPuntosCinematicaInversa(const std::vector<
         std::vector<double> puntos = generarPuntos(0, 180, new_roll);
         if(cont <= (x + 1)/2){
 
-            auto q1 = atan(-px / py) + 3.1416;
-            auto q2 = px * sin(q1) - py * cos(q1); 
+            auto q1 = atan2(-px,py);
+            auto q2 = std::abs(px * sin(q1) - py * cos(q1));
             auto q3 = pz;
             auto q4 = atan(-(q2 + 515) / q3);
             auto q5=90;
@@ -390,8 +391,8 @@ std::vector<std::vector<int>> CalcularPuntosCinematicaInversa(const std::vector<
             }
         }
         if(cont > (x + 1)/2 && cont <=x+2){
-            auto q1 = atan(-px / py);
-            auto q2 = px * sin(q1) - py * cos(q1); 
+            auto q1 = atan2(-px,py);
+            auto q2 = std::abs(px * sin(q1) - py * cos(q1));
             auto q3 = pz;
             auto q4 = atan(-(q2 + 515) / q3);
             auto q5=90;
@@ -474,7 +475,7 @@ void procesarDatos(int slider1Value, int slider0Value, int slider2Value,int new_
     }
     std::cout << std::endl;
 
-    // Esta funcion calcula los puntos de posicionamiento de la circunferencia
+    // Esta funcion calcula los puntos de posicionamiento de la circunferencia  (Son las cordenadas en las que se debe de mover en cordenadas esfericas  )
     std::vector<std::vector<int>> result = CalcularPuntosMovimiento(resultado1, resultado2, slider2Value);
     printVectorOfVectors(result);
 
