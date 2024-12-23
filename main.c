@@ -158,6 +158,13 @@ const osThreadAttr_t Tarea_Maestra_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
+/* Definitions for Boton_system_in */
+osThreadId_t Boton_system_inHandle;
+const osThreadAttr_t Boton_system_in_attributes = {
+  .name = "Boton_system_in",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityLow,
+};
 /* USER CODE BEGIN PV */
 
 uint8_t byte;
@@ -282,6 +289,16 @@ void Mover_Motor_5(void *argument);
 void Enviar_datos_confirmaccion(void *argument);
 void Recibir_datos_app(void *argument);
 void Tarea_administradora(void *argument);
+void Boton_interrupt(void *argument);
+void A4988_q1();
+void A4988_q2();
+void A4988_q3();
+void Home (void);
+void Home_q2(void);
+void Home_q3(void);
+void mover_motorq1_rad(float radianes);
+void mover_motorq2_mm(float milimetros);
+void mover_motorq3_mm(float milimetros);
 
 /* USER CODE BEGIN PFP */
 
@@ -380,6 +397,195 @@ uint32_t milimetros_a_pasos(float milimetros) {
     return (uint32_t)(fabs(milimetros) * pasos_por_mm);
 }
 
+void A4988_q1(){
+	HAL_GPIO_WritePin(GPIOE, ENABLE_PIN_q1, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOB, MS0_PIN_q1, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(GPIOB, MS1_PIN_q1, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOB, MS2_PIN_q1, GPIO_PIN_RESET);
+}
+
+void A4988_q2(){
+	HAL_GPIO_WritePin(GPIOD, ENABLE_PIN_q2, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOD, MS0_PIN_q2, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOD, MS1_PIN_q2, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOC, MS2_PIN_q2, GPIO_PIN_RESET);
+}
+
+void A4988_q3(){
+	HAL_GPIO_WritePin(GPIOA, ENABLE_PIN_q3, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOC, MS0_PIN_q3, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOC, MS1_PIN_q3, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOD, MS2_PIN_q3, GPIO_PIN_RESET);
+}
+
+void Home (void){
+	//Home_q2();
+	//Home_q3();
+	//TIM2->CCR2 = radianes_a_valor(M_PI/2); //q5
+	//TIM2->CCR4 = radianes_a_valor(M_PI/2); //q4
+}
+
+void Home_q2(void){
+	while(FC_Home_q2){
+		HAL_GPIO_WritePin(GPIOA, DIR_q2, GPIO_PIN_RESET);  //Retroceso
+		for (int i = 0; i < 100000 && FC_Home_q2; i++) {
+			HAL_GPIO_WritePin(GPIOA, STEP_q2, GPIO_PIN_SET);
+			HAL_Delay(VELOCIDAD);
+			HAL_GPIO_WritePin(GPIOA, STEP_q2, GPIO_PIN_RESET);
+			HAL_Delay(VELOCIDAD);
+		}
+		if (!FC_Home_q2) break;
+		HAL_Delay(500);
+	}
+
+	HAL_GPIO_WritePin(GPIOA, DIR_q2, GPIO_PIN_SET); //Avance
+	for (int i = 0; i < 2500; i++) {
+		HAL_GPIO_WritePin(GPIOA, STEP_q2, GPIO_PIN_SET);
+		HAL_Delay(VELOCIDAD);
+		HAL_GPIO_WritePin(GPIOA, STEP_q2, GPIO_PIN_RESET);
+		HAL_Delay(VELOCIDAD);
+		paso_actual_q2--;
+	}
+	HAL_Delay(500);
+	FC_Home_q2 = 1;
+}
+
+void Home_q3(void){
+	while(FC_Home_q3){
+		HAL_GPIO_WritePin(GPIOD, DIR_q3, GPIO_PIN_RESET);  //Abajo
+		for (int i = 0; i < 100000 && FC_Home_q3; i++) {
+			HAL_GPIO_WritePin(GPIOD, STEP_q3, GPIO_PIN_SET);
+			HAL_Delay(VELOCIDAD);
+			HAL_GPIO_WritePin(GPIOD, STEP_q3, GPIO_PIN_RESET);
+			HAL_Delay(VELOCIDAD);
+		}
+		if (!FC_Home_q3) break;
+		HAL_Delay(500);
+	}
+
+	HAL_GPIO_WritePin(GPIOD, DIR_q3, GPIO_PIN_SET); //Arriba
+	for (int i = 0; i < 80; i++) {
+		HAL_GPIO_WritePin(GPIOD, STEP_q3, GPIO_PIN_SET);
+		HAL_Delay(VELOCIDAD);
+		HAL_GPIO_WritePin(GPIOD, STEP_q3, GPIO_PIN_RESET);
+		HAL_Delay(VELOCIDAD);
+	}
+	HAL_Delay(500);
+	FC_Home_q3 = 1;
+}
+
+void mover_motorq1_rad(float radianes){
+
+    int pasos = (int)((radianes / (2 * M_PI)) * 400);
+    int nuevo_paso = pasos;
+    int diferencia_pasos = nuevo_paso - paso_actual_q1;
+
+    if (diferencia_pasos > 0) {
+        // Movimiento hacia adelante
+    	HAL_GPIO_WritePin(GPIOD, DIR_q1, GPIO_PIN_RESET); //Antihorario
+    	for (int i = 0; i < diferencia_pasos; i++) {
+    		HAL_GPIO_WritePin(GPIOB, STEP_q1, GPIO_PIN_SET);
+    		HAL_Delay(VELOCIDAD);
+    		HAL_GPIO_WritePin(GPIOB, STEP_q1, GPIO_PIN_RESET);
+    		HAL_Delay(VELOCIDAD);
+    	}
+    }
+
+//    if(radianes == (2*M_PI))
+//    {
+//    	radianes = 0;
+//    }
+
+    else if (diferencia_pasos < 0) {
+        // Movimiento hacia atrás
+    	HAL_GPIO_WritePin(GPIOD, DIR_q1, GPIO_PIN_SET); //Horario
+    	diferencia_pasos = -diferencia_pasos;
+    	for (int i = 0; i < diferencia_pasos ; i++) {
+    		HAL_GPIO_WritePin(GPIOB, STEP_q1, GPIO_PIN_SET);
+    		HAL_Delay(VELOCIDAD);
+    		HAL_GPIO_WritePin(GPIOB, STEP_q1, GPIO_PIN_RESET);
+    		HAL_Delay(VELOCIDAD);
+    	}
+    }
+
+    paso_actual_q1 = nuevo_paso;
+    HAL_Delay(500);
+}
+
+void mover_motorq2_mm(float milimetros){
+
+	//milimetros = milimetros - 500;
+
+    if (milimetros < 0) {
+        milimetros = 0;
+    }
+    else if (milimetros > 210) {
+        milimetros = 210;
+    }
+
+    uint32_t pasos = milimetros_a_pasos(milimetros);
+    int diferencia_pasos = pasos - paso_actual_q2;
+
+    if (diferencia_pasos != 0) {
+        if (diferencia_pasos > 0) {
+        	 HAL_GPIO_WritePin(GPIOA, DIR_q2, GPIO_PIN_RESET); //Retroceso
+        }
+        else {
+        	HAL_GPIO_WritePin(GPIOA, DIR_q2, GPIO_PIN_SET); //Avance
+            diferencia_pasos = -diferencia_pasos; // Hacer positiva la diferencia para el bucle
+        }
+
+        for (int i = 0; i < diferencia_pasos; i++) {
+        	HAL_GPIO_WritePin(GPIOA, STEP_q2, GPIO_PIN_SET);
+        	HAL_Delay(VELOCIDAD);
+        	HAL_GPIO_WritePin(GPIOA, STEP_q2, GPIO_PIN_RESET);
+        	HAL_Delay(VELOCIDAD);
+        }
+
+        paso_actual_q2 = pasos;
+    }
+
+    HAL_Delay(500);
+}
+
+void mover_motorq3_mm(float milimetros){
+
+	if (milimetros < 0) {
+		milimetros = 0;
+	}
+	else if (milimetros > 215) {
+		milimetros = 215 ;
+	}
+
+    uint32_t pasos = milimetros_a_pasos(milimetros);
+    int nuevo_paso = pasos;
+    int diferencia_pasos = nuevo_paso - paso_actual_q3;
+
+    if (diferencia_pasos > 0) {
+    	HAL_GPIO_WritePin(GPIOD, DIR_q3, GPIO_PIN_SET); //Arriba
+    	for (int i = 0; i < diferencia_pasos; i++) {
+    		HAL_GPIO_WritePin(GPIOD, STEP_q3, GPIO_PIN_SET);
+    		HAL_Delay(VELOCIDAD);
+    		HAL_GPIO_WritePin(GPIOD, STEP_q3, GPIO_PIN_RESET);
+    		HAL_Delay(VELOCIDAD);
+    	}
+    }
+
+    else if (diferencia_pasos < 0) {
+    	HAL_GPIO_WritePin(GPIOD, DIR_q3, GPIO_PIN_RESET);  //Abajo
+    	diferencia_pasos = -diferencia_pasos; // Hacer positiva la diferencia para el bucle
+    	for (int i = 0; i < diferencia_pasos; i++) {
+    		HAL_GPIO_WritePin(GPIOD, STEP_q3, GPIO_PIN_SET);
+    		HAL_Delay(VELOCIDAD);
+    		HAL_GPIO_WritePin(GPIOD, STEP_q3, GPIO_PIN_RESET);
+    		HAL_Delay(VELOCIDAD);
+    	}
+    }
+
+    paso_actual_q3 = nuevo_paso;
+    HAL_Delay(500);
+}
+
 
 
 /* USER CODE END 0 */
@@ -423,13 +629,17 @@ int main(void)
   MX_ADC2_Init();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
+  A4988_q1();
+  A4988_q2();
+  A4988_q3();
+  Home();
 
   /* USER CODE END 2 */
 
   /* Init scheduler */
   osKernelInitialize();
-
 
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
@@ -453,6 +663,9 @@ int main(void)
 
   /* creation of Tarea_Maestra */
   Tarea_MaestraHandle = osThreadNew(Tarea_administradora, NULL, &Tarea_Maestra_attributes);
+
+  /* creation of Boton_system_in */
+  //Boton_system_inHandle = osThreadNew(Boton_interrupt, NULL, &Boton_system_in_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -959,10 +1172,12 @@ void Mover_Motor_1(void *argument)
 {
   /* USER CODE BEGIN 5 */
   char msg[] = "Motor 1 is running\r\n";  // Message specific to Motor 1
+  char msg_1[] = "Process runing....\r\n";  // Message specific to Motor 1
   /* Infinite loop */
   //for(;;)
   //{
 	HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+	mover_motorq1_rad(2.582);
     osDelay(1000);
     osEventFlagsSet(eventGroup, TASK1_DONE); // Señalar que Task1 terminó
     osThreadExit();
@@ -985,6 +1200,7 @@ void Mover_Motor_2(void *argument)
   //for(;;)
   //{
 	HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+	mover_motorq2_mm(300);
 	osDelay(1000);
 	osEventFlagsSet(eventGroup, TASK2_DONE); // Señalar que Task1 terminó
 	osThreadExit();
@@ -1007,6 +1223,7 @@ void Mover_Motor_3(void *argument)
   //for(;;)
   //{
 	HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+	mover_motorq3_mm(200);
 	osDelay(1000);
 	osEventFlagsSet(eventGroup, TASK3_DONE); // Señalar que Task1 terminó
 	osThreadExit();
@@ -1029,6 +1246,7 @@ void Mover_Motor_4(void *argument)
   //for(;;)
   //{
 	 HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+	 TIM2->CCR4 = radianes_a_valor(1.578); //q4
 	 osDelay(1000);
 	 osEventFlagsSet(eventGroup, TASK4_DONE); // Señalar que Task1 terminó
 	 osThreadExit();
@@ -1051,6 +1269,7 @@ void Mover_Motor_5(void *argument)
   //for(;;)
   //{
 	HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+	TIM2->CCR2 = radianes_a_valor(1.578); //q5
     osDelay(1000);
     osEventFlagsSet(eventGroup, TASK5_DONE); // Señalar que Task1 terminó
     osThreadExit();
@@ -1074,6 +1293,7 @@ void Enviar_datos_confirmaccion(void *argument)
   //for(;;)
   //{
 	HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+
     osDelay(1000);
     osEventFlagsSet(eventGroup, TASK6_DONE); // Señalar que Task6 terminó
     osThreadExit();
@@ -1152,6 +1372,24 @@ void Tarea_administradora(void *argument)
 
   }
   /* USER CODE END Tarea_administradora */
+}
+
+/* USER CODE BEGIN Header_Boton_interrupt */
+/**
+* @brief Function implementing the Boton_system_in thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_Boton_interrupt */
+void Boton_interrupt(void *argument)
+{
+  /* USER CODE BEGIN Boton_interrupt */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END Boton_interrupt */
 }
 
 /**
